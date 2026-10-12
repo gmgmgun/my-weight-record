@@ -97,6 +97,47 @@ describe('home screen', () => {
     expect(input).toHaveValue('73.5')
   })
 
+  it('moves to the previous and next day with the arrow buttons', async () => {
+    const { user } = await renderApp({ seed: (s) => s.putEntry(e('2026-10-11', 73.5)) })
+    const next = screen.getByRole('button', { name: '다음 날' })
+    expect(next).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: '이전 날' }))
+    expect(screen.getByText('10월 11일 (일)')).toBeInTheDocument()
+    expect(screen.getByLabelText('체중(kg)')).toHaveValue('73.5')
+    expect(next).toBeEnabled()
+
+    await user.click(next)
+    expect(screen.getByText('10월 12일 (월)')).toBeInTheDocument()
+    expect(screen.getByLabelText('체중(kg)')).toHaveValue('')
+    expect(next).toBeDisabled()
+  })
+
+  it('swipes horizontally to change the day, ignoring vertical drags and the future', async () => {
+    await renderApp({ seed: (s) => s.putEntry(e('2026-10-11', 73.5)) })
+    const form = screen.getByLabelText('체중(kg)').closest('form')!
+    const swipe = (dx: number, dy: number) => {
+      fireEvent.touchStart(form, { touches: [{ clientX: 200, clientY: 300 }] })
+      fireEvent.touchEnd(form, { changedTouches: [{ clientX: 200 + dx, clientY: 300 + dy }] })
+    }
+
+    swipe(-120, 5) // 왼쪽으로 밀기 = 다음날, 오늘이라 그대로
+    expect(screen.getByText('10월 12일 (월)')).toBeInTheDocument()
+
+    swipe(120, 5) // 오른쪽으로 밀기 = 전날
+    expect(screen.getByText('10월 11일 (일)')).toBeInTheDocument()
+    expect(screen.getByLabelText('체중(kg)')).toHaveValue('73.5')
+
+    swipe(70, 120) // 세로 움직임이 더 크면 스크롤로 본다
+    expect(screen.getByText('10월 11일 (일)')).toBeInTheDocument()
+
+    swipe(30, 0) // 너무 짧으면 무시
+    expect(screen.getByText('10월 11일 (일)')).toBeInTheDocument()
+
+    swipe(-120, -5)
+    expect(screen.getByText('10월 12일 (월)')).toBeInTheDocument()
+  })
+
   it('loads the existing memo when a past date is selected', async () => {
     await renderApp({ seed: (s) => s.putEntry(e('2026-10-10', 73.1, '회식')) })
     fireEvent.change(screen.getByLabelText('날짜'), { target: { value: '2026-10-10' } })

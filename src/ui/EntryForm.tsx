@@ -1,8 +1,25 @@
-import { useId, useState, type FormEvent } from 'react'
+import { useId, useRef, useState, type FormEvent } from 'react'
+import { addDays } from '../lib/date'
 import { isLargeJump, JUMP_WARN_KG, MEMO_MAX, parseWeight } from '../lib/validate'
 import { previousEntry } from '../stats/stats'
 import type { Entry, ISODate } from '../types'
 import { fmtDate, fmtKg } from './format'
+
+const SWIPE_MIN_PX = 50
+
+// 하루씩 넘길 때 내용이 들어오는 방향을 보여 준다(전날은 왼쪽에서, 다음날은 오른쪽에서).
+// 입력칸을 다시 만들지 않도록 CSS 키 리마운트 대신 Web Animations API를 쓴다.
+function slideIn(el: HTMLElement | null, direction: -1 | 1) {
+  if (!el || typeof el.animate !== 'function') return
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+  el.animate(
+    [
+      { transform: `translateX(${direction * 28}px)`, opacity: 0 },
+      { transform: 'none', opacity: 1 },
+    ],
+    { duration: 220, easing: 'ease-out' },
+  )
+}
 
 type Props = {
   entries: Entry[]
@@ -29,6 +46,27 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
   const parsed = parseWeight(weight)
   const prev = previousEntry(entries, date)
   const warn = parsed.ok && isLargeJump(prev?.weightKg, parsed.value)
+
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const touchStart = useRef<{ x: number; y: number } | null>(null)
+
+  function shiftDay(days: number) {
+    const next = addDays(date, days)
+    if (next > today) return
+    changeDate(next)
+    slideIn(bodyRef.current, days < 0 ? -1 : 1)
+  }
+
+  // 세로 스크롤과 구분하려고, 가로로 충분히 길고 세로보다 확실히 크게 움직였을 때만 넘긴다.
+  function endSwipe(x: number, y: number) {
+    const start = touchStart.current
+    touchStart.current = null
+    if (!start) return
+    const dx = x - start.x
+    const dy = y - start.y
+    if (Math.abs(dx) < SWIPE_MIN_PX || Math.abs(dx) < Math.abs(dy) * 1.5) return
+    shiftDay(dx > 0 ? -1 : 1)
+  }
 
   function changeDate(d: ISODate) {
     const defaults = defaultsFor(d)
@@ -62,45 +100,80 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
 
   return (
     // noValidate: 브라우저 기본 검증(max 날짜 등) 대신 아래 오류 문구로 안내한다.
-    <form className="card entry-form" noValidate onSubmit={submit}>
+    <form
+      className="card entry-form"
+      noValidate
+      onSubmit={submit}
+      onTouchStart={
+        lockDate ? undefined : (ev) => (touchStart.current = { x: ev.touches[0].clientX, y: ev.touches[0].clientY })
+      }
+      onTouchEnd={
+        lockDate ? undefined : (ev) => endSwipe(ev.changedTouches[0].clientX, ev.changedTouches[0].clientY)
+      }
+    >
       <div className="entry-head">
-        <strong className="entry-date">{fmtDate(date)}</strong>
+        <div className="day-nav">
+          {!lockDate && (
+            <button type="button" className="day-step" aria-label="이전 날" onClick={() => shiftDay(-1)}>
+              ‹
+            </button>
+          )}
+          <strong className="entry-date">{fmtDate(date)}</strong>
+          {!lockDate && (
+            <button
+              type="button"
+              className="day-step"
+              aria-label="다음 날"
+              disabled={date >= today}
+              onClick={() => shiftDay(1)}
+            >
+              ›
+            </button>
+          )}
+        </div>
         {!lockDate && (
           <label className="date-pick">
             <span className="sr-only">날짜</span>
-            <input type="date" value={date} max={today} onChange={(ev) => ev.target.value && changeDate(ev.target.value)} />
+            <input
+              type="date"
+              value={date}
+              max={today}
+              onChange={(ev) => ev.target.value && changeDate(ev.target.value)}
+            />
           </label>
         )}
       </div>
-      <div className="weight-field">
-        <label htmlFor={weightId}>
-          체중<span className="sr-only">(kg)</span>
-        </label>
-        <div className="weight-box">
-          <input
-            id={weightId}
-            inputMode="decimal"
-            autoComplete="off"
-            value={weight}
-            onChange={(ev) => {
-              setWeight(ev.target.value)
-              setStatus(undefined)
-            }}
-          />
-          <span className="unit" aria-hidden="true">
-            kg
-          </span>
+      <div ref={bodyRef} className="entry-body">
+        <div className="weight-field">
+          <label htmlFor={weightId}>
+            체중<span className="sr-only">(kg)</span>
+          </label>
+          <div className="weight-box">
+            <input
+              id={weightId}
+              inputMode="decimal"
+              autoComplete="off"
+              value={weight}
+              onChange={(ev) => {
+                setWeight(ev.target.value)
+                setStatus(undefined)
+              }}
+            />
+            <span className="unit" aria-hidden="true">
+              kg
+            </span>
+          </div>
         </div>
+        <label>
+          메모
+          <input
+            value={memo}
+            maxLength={MEMO_MAX}
+            placeholder="컨디션, 식단 등 (선택)"
+            onChange={(ev) => setMemo(ev.target.value)}
+          />
+        </label>
       </div>
-      <label>
-        메모
-        <input
-          value={memo}
-          maxLength={MEMO_MAX}
-          placeholder="컨디션, 식단 등 (선택)"
-          onChange={(ev) => setMemo(ev.target.value)}
-        />
-      </label>
       {error && (
         <p role="alert" className="error">
           {error}
