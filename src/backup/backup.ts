@@ -17,7 +17,7 @@ export function buildBackup(snapshot: AppSnapshot, now: Date = new Date()): Back
     version: BACKUP_VERSION,
     exportedAt: now.toISOString(),
     entries: sortByDate(snapshot.entries),
-    settings: snapshot.settings,
+    settings: { ...snapshot.settings, lastBackupAt: now.getTime() },
   }
 }
 
@@ -101,10 +101,14 @@ export function parseBackup(text: string): ParseBackupResult {
 export function mergeBackup(current: AppSnapshot, incoming: BackupFile): AppSnapshot {
   const byDate = new Map(current.entries.map((e) => [e.date, e]))
   for (const e of incoming.entries) byDate.set(e.date, e)
-  return {
-    entries: sortByDate([...byDate.values()]),
-    settings: { ...current.settings, ...incoming.settings },
-  }
+  const settings: Settings = { ...current.settings, ...incoming.settings }
+  const pick = (a: number | undefined, b: number | undefined, f: (x: number, y: number) => number) =>
+    a === undefined ? b : b === undefined ? a : f(a, b)
+  const lastBackupAt = pick(current.settings.lastBackupAt, incoming.settings.lastBackupAt, Math.max)
+  const firstUseAt = pick(current.settings.firstUseAt, incoming.settings.firstUseAt, Math.min)
+  if (lastBackupAt !== undefined) settings.lastBackupAt = lastBackupAt
+  if (firstUseAt !== undefined) settings.firstUseAt = firstUseAt
+  return { entries: sortByDate([...byDate.values()]), settings }
 }
 
 export function replaceWithBackup(incoming: BackupFile): AppSnapshot {

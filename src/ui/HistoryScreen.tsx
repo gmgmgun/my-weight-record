@@ -51,6 +51,7 @@ export function HistoryScreen({ app, today, onExport }: Props) {
                       entries={app.entries}
                       today={today}
                       initialDate={entry.date}
+                      lockDate
                       onSave={app.saveEntry}
                     />
                     <button type="button" className="danger" onClick={() => void remove(entry.date)}>

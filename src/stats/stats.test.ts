@@ -120,6 +120,13 @@ describe('effectiveStart', () => {
     expect(effectiveStart(list, { startDate: '2026-08-01', startKg: 81 })).toEqual({ date: '2026-08-01', kg: 81 })
   })
 
+  it('uses the first entry on/after startDate for kg', () => {
+    const l = [e('2026-09-01', 76), e('2026-09-10', 75), e('2026-10-12', 72)]
+    expect(effectiveStart(l, { startDate: '2026-09-05' })).toEqual({ date: '2026-09-05', kg: 75 })
+    expect(effectiveStart(l, { startDate: '2026-11-01' })).toEqual({ date: '2026-11-01', kg: 76 })
+    expect(effectiveStart(l, { startDate: '2026-09-05', startKg: 80 })).toEqual({ date: '2026-09-05', kg: 80 })
+  })
+
   it('is undefined with no data', () => {
     expect(effectiveStart([], {})).toBeUndefined()
   })

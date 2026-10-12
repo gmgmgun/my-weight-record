@@ -97,7 +97,8 @@ export function recentPeriods(entries: Entry[], unit: PeriodUnit, count: number)
 export function effectiveStart(entries: Entry[], settings: Settings): { date: ISODate; kg: number } | undefined {
   const first = sortByDate(entries)[0]
   const date = settings.startDate ?? first?.date
-  const kg = settings.startKg ?? first?.weightKg
+  const atStart = settings.startDate !== undefined ? sortByDate(entries).find((x) => x.date >= settings.startDate!) : undefined
+  const kg = settings.startKg ?? (atStart ?? first)?.weightKg
   return date !== undefined && kg !== undefined ? { date, kg } : undefined
 }
 

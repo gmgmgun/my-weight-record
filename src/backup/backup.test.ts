@@ -21,6 +21,7 @@ describe('buildBackup / parseBackup', () => {
     const snapshot = { entries: [e('2026-10-02', 71, '야식'), e('2026-10-01', 70)], settings: { goalKg: 68 } }
     const file = buildBackup(snapshot, new Date('2026-10-12T09:00:00Z'))
     expect(file.exportedAt).toBe('2026-10-12T09:00:00.000Z')
+    expect(file.settings).toEqual({ goalKg: 68, lastBackupAt: new Date('2026-10-12T09:00:00Z').getTime() })
     expect(file.entries.map((x) => x.date)).toEqual(['2026-10-01', '2026-10-02'])
     expect(parseBackup(JSON.stringify(file))).toEqual({ ok: true, data: file })
   })
@@ -94,6 +95,12 @@ describe('merge / replace', () => {
       entries: [e('2026-10-01', 70), e('2026-10-02', 72), e('2026-10-03', 73)],
       settings: { goalKg: 68, firstUseAt: 100 },
     })
+  })
+
+  it('keeps the latest backup time and earliest first use', () => {
+    const cur = { entries: [], settings: { goalKg: 65, firstUseAt: 100, lastBackupAt: 500 } }
+    const inc = { ...incoming, entries: [], settings: { goalKg: 68, firstUseAt: 50, lastBackupAt: 300 } }
+    expect(mergeBackup(cur, inc).settings).toEqual({ goalKg: 68, firstUseAt: 50, lastBackupAt: 500 })
   })
 
   it('replaces everything', () => {

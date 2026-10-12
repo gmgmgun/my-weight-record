@@ -72,7 +72,15 @@ export function ChartScreen({ entries, settings, today }: Props) {
                     label={{ value: `목표 ${fmtKg(goal)}`, position: 'insideTopRight', fill: 'var(--goal)' }}
                   />
                 )}
-                <Line dataKey="weight" name="체중" stroke="none" dot={{ r: 3 }} isAnimationActive={false} />
+                <Line
+                  dataKey="weight"
+                  name="체중"
+                  stroke="none"
+                  dot={{ r: 3, fill: 'var(--muted)', stroke: 'none', fillOpacity: 0.7 }}
+                  activeDot={{ r: 5, fill: 'var(--muted)', stroke: 'var(--card)' }}
+                  legendType="circle"
+                  isAnimationActive={false}
+                />
                 <Line
                   dataKey="ma7"
                   name="7일 평균"

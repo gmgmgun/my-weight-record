@@ -54,6 +54,12 @@ describe('history list', () => {
     expect((await store.getEntries())[0].weightKg).toBe(72.8)
   })
 
+  it('edit form has no date input', async () => {
+    const { user } = await openHistory({ seed: (s) => s.putEntry(e('2026-10-10', 73.0)) })
+    await user.click(screen.getByRole('button', { name: /10월 10일/ }))
+    expect(screen.queryByLabelText('날짜')).toBeNull()
+  })
+
   it('deletes only after confirmation', async () => {
     const { store, user } = await openHistory({ seed: (s) => s.putEntry(e('2026-10-10', 73.0)) })
     const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true)

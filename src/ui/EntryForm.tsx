@@ -8,10 +8,11 @@ type Props = {
   entries: Entry[]
   today: ISODate
   initialDate?: ISODate
+  lockDate?: boolean
   onSave: (date: ISODate, weightKg: number, memo: string) => Promise<void>
 }
 
-export function EntryForm({ entries, today, initialDate = today, onSave }: Props) {
+export function EntryForm({ entries, today, initialDate = today, lockDate, onSave }: Props) {
   const defaultsFor = (d: ISODate) => {
     const own = entries.find((x) => x.date === d)
     const base = own ?? latestEntry(entries)
@@ -39,6 +40,7 @@ export function EntryForm({ entries, today, initialDate = today, onSave }: Props
 
   async function submit(ev: FormEvent) {
     ev.preventDefault()
+    setStatus(undefined)
     if (date > today) {
       setError('미래 날짜에는 기록할 수 없습니다.')
       return
@@ -62,10 +64,12 @@ export function EntryForm({ entries, today, initialDate = today, onSave }: Props
     <form className="card entry-form" noValidate onSubmit={submit}>
       <div className="date-row">
         <strong>{fmtDate(date)}</strong>
-        <label>
-          날짜
-          <input type="date" value={date} max={today} onChange={(ev) => ev.target.value && changeDate(ev.target.value)} />
-        </label>
+        {!lockDate && (
+          <label>
+            날짜
+            <input type="date" value={date} max={today} onChange={(ev) => ev.target.value && changeDate(ev.target.value)} />
+          </label>
+        )}
       </div>
       <label className="weight-field">
         체중(kg)
