@@ -52,36 +52,54 @@ function shiftPeriod(key: string, unit: PeriodUnit, n: number): string {
   return unit === 'week' ? addDays(key, 7 * n) : addMonths(key, n)
 }
 
-export function periodAverages(entries: Entry[], unit: PeriodUnit): Map<string, number> {
-  const acc = new Map<string, { sum: number; count: number }>()
+export type PeriodStats = { avg: number; min: number; max: number }
+
+export function periodStats(entries: Entry[], unit: PeriodUnit): Map<string, PeriodStats> {
+  const acc = new Map<string, { sum: number; count: number; min: number; max: number }>()
   for (const e of entries) {
     const key = periodKey(e.date, unit)
-    const cur = acc.get(key) ?? { sum: 0, count: 0 }
-    acc.set(key, { sum: cur.sum + e.weightKg, count: cur.count + 1 })
+    const cur = acc.get(key)
+    acc.set(
+      key,
+      cur
+        ? {
+            sum: cur.sum + e.weightKg,
+            count: cur.count + 1,
+            min: Math.min(cur.min, e.weightKg),
+            max: Math.max(cur.max, e.weightKg),
+          }
+        : { sum: e.weightKg, count: 1, min: e.weightKg, max: e.weightKg },
+    )
   }
-  return new Map([...acc].map(([k, v]) => [k, v.sum / v.count]))
+  return new Map([...acc].map(([k, v]) => [k, { avg: v.sum / v.count, min: v.min, max: v.max }]))
 }
 
 export function weekComparison(entries: Entry[]): { thisWeek?: number; lastWeek?: number } {
   const latest = latestEntry(entries)
   if (!latest) return {}
-  const avgs = periodAverages(entries, 'week')
+  const stats = periodStats(entries, 'week')
   const week = startOfWeek(latest.date)
-  return { thisWeek: avgs.get(week), lastWeek: avgs.get(addDays(week, -7)) }
+  return { thisWeek: stats.get(week)?.avg, lastWeek: stats.get(addDays(week, -7))?.avg }
 }
 
-export type PeriodRow = { key: string; avg?: number; delta?: number }
+export type PeriodRow = { key: string; avg?: number; min?: number; max?: number; delta?: number }
 
 export function recentPeriods(entries: Entry[], unit: PeriodUnit, count: number): PeriodRow[] {
   const latest = latestEntry(entries)
   if (!latest) return []
-  const avgs = periodAverages(entries, unit)
+  const stats = periodStats(entries, unit)
   const newest = periodKey(latest.date, unit)
   return Array.from({ length: count }, (_, i) => {
     const key = shiftPeriod(newest, unit, -i)
-    const avg = avgs.get(key)
-    const prev = avgs.get(shiftPeriod(key, unit, -1))
-    return { key, avg, delta: avg !== undefined && prev !== undefined ? avg - prev : undefined }
+    const cur = stats.get(key)
+    const prev = stats.get(shiftPeriod(key, unit, -1))
+    return {
+      key,
+      avg: cur?.avg,
+      min: cur?.min,
+      max: cur?.max,
+      delta: cur && prev ? cur.avg - prev.avg : undefined,
+    }
   })
 }
 

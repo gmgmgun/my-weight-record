@@ -54,18 +54,24 @@ export function ChartScreen({ entries, settings, today }: Props) {
   const goal = settings.goalKg
   const values = [...visible.map((e) => e.weightKg), ...(goal === undefined ? [] : [goal])]
   const domain = [Math.floor(Math.min(...values) - 1), Math.ceil(Math.max(...values) + 1)]
+  // 월요일 보기는 하루 값이라 최저·최고 열이 없다
+  const showRange = view !== 'monday'
   const rows =
     view === 'monday'
       ? recentWeekdays(entries, today, MONDAY, 8).map((r) => ({
           key: r.date,
           label: fmtShortDate(r.date),
           value: r.weightKg,
+          min: undefined,
+          max: undefined,
           delta: r.delta,
         }))
       : recentPeriods(entries, view, view === 'week' ? 8 : 6).map((r) => ({
           key: r.key,
           label: fmtPeriod(r.key, view),
           value: r.avg,
+          min: r.min,
+          max: r.max,
           delta: r.delta,
         }))
 
@@ -169,11 +175,13 @@ export function ChartScreen({ entries, settings, today }: Props) {
               </button>
             ))}
           </div>
-          <table className="periods">
+          <table className={showRange ? 'periods with-range' : 'periods'}>
             <thead>
               <tr>
                 <th>{view === 'week' ? '주' : view === 'month' ? '월' : '월요일'}</th>
                 <th>{view === 'monday' ? '체중' : '평균'}</th>
+                {showRange && <th>최저</th>}
+                {showRange && <th>최고</th>}
                 <th>직전 대비</th>
               </tr>
             </thead>
@@ -182,6 +190,8 @@ export function ChartScreen({ entries, settings, today }: Props) {
                 <tr key={r.key}>
                   <td>{r.label}</td>
                   <td>{fmtKg(r.value)}</td>
+                  {showRange && <td>{fmtKg(r.min)}</td>}
+                  {showRange && <td>{fmtKg(r.max)}</td>}
                   <td>{fmtDelta(r.delta)}</td>
                 </tr>
               ))}

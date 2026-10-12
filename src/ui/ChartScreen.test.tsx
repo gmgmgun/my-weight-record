@@ -44,19 +44,29 @@ describe('chart screen', () => {
   })
 
   it('shows weekly and monthly average tables', async () => {
-    const { user } = await openChart([e('2026-09-20', 77), e('2026-10-05', 73), e('2026-10-12', 72)])
+    const { user } = await openChart([
+      e('2026-09-20', 77),
+      e('2026-10-05', 73),
+      e('2026-10-12', 71.5),
+      e('2026-10-13', 74.5),
+    ])
     const table = () => within(screen.getByRole('region', { name: '평균 비교' }))
+    const headers = () => table().getAllByRole('columnheader').map((h) => h.textContent)
 
+    // 열: 구간 | 평균 | 최저 | 최고 | 직전 대비
+    expect(headers()).toEqual(['주', '평균', '최저', '최고', '직전 대비'])
     const weekRows = table().getAllByRole('row')
     expect(weekRows).toHaveLength(1 + 8)
-    expect(weekRows[1]).toHaveTextContent('10/12 주72.0-1.0')
-    expect(weekRows[2]).toHaveTextContent('10/5 주73.0–')
+    expect(weekRows[1]).toHaveTextContent('10/12 주73.071.574.50.0')
+    expect(weekRows[2]).toHaveTextContent('10/5 주73.073.073.0–')
+    expect(weekRows[3]).toHaveTextContent('9/28 주––––')
 
     await user.click(screen.getByRole('button', { name: '월간' }))
+    expect(headers()).toEqual(['월', '평균', '최저', '최고', '직전 대비'])
     const monthRows = table().getAllByRole('row')
     expect(monthRows).toHaveLength(1 + 6)
-    expect(monthRows[1]).toHaveTextContent('2026년 10월72.5-4.5')
-    expect(monthRows[2]).toHaveTextContent('2026년 9월77.0–')
+    expect(monthRows[1]).toHaveTextContent('2026년 10월73.071.574.5-4.0')
+    expect(monthRows[2]).toHaveTextContent('2026년 9월77.077.077.0–')
   })
 
   it('shows the weight recorded on each recent Monday', async () => {
@@ -64,6 +74,8 @@ describe('chart screen', () => {
     await user.click(screen.getByRole('button', { name: '월요일' }))
     const region = within(screen.getByRole('region', { name: '평균 비교' }))
     expect(region.getByRole('columnheader', { name: '체중' })).toBeInTheDocument()
+    // 하루 값이라 최저·최고 열은 없다
+    expect(region.queryByRole('columnheader', { name: '최저' })).not.toBeInTheDocument()
 
     const rows = region.getAllByRole('row')
     expect(rows).toHaveLength(1 + 8)

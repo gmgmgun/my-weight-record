@@ -111,23 +111,23 @@ describe('recentPeriods', () => {
   it('lists weeks newest first with delta vs previous week', () => {
     const list = [e('2026-10-05', 73), e('2026-10-12', 72)]
     expect(recentPeriods(list, 'week', 2)).toEqual([
-      { key: '2026-10-12', avg: 72, delta: -1 },
-      { key: '2026-10-05', avg: 73, delta: undefined },
+      { key: '2026-10-12', avg: 72, min: 72, max: 72, delta: -1 },
+      { key: '2026-10-05', avg: 73, min: 73, max: 73, delta: undefined },
     ])
   })
 
   it('includes empty months as gaps', () => {
     const list = [e('2026-08-15', 75), e('2026-10-01', 73), e('2026-10-20', 71)]
     expect(recentPeriods(list, 'month', 3)).toEqual([
-      { key: '2026-10', avg: 72, delta: undefined },
-      { key: '2026-09', avg: undefined, delta: undefined },
-      { key: '2026-08', avg: 75, delta: undefined },
+      { key: '2026-10', avg: 72, min: 71, max: 73, delta: undefined },
+      { key: '2026-09', avg: undefined, min: undefined, max: undefined, delta: undefined },
+      { key: '2026-08', avg: 75, min: 75, max: 75, delta: undefined },
     ])
   })
 
   it('crosses year boundaries', () => {
     const list = [e('2026-12-20', 74), e('2027-01-05', 73)]
-    expect(recentPeriods(list, 'month', 1)).toEqual([{ key: '2027-01', avg: 73, delta: -1 }])
+    expect(recentPeriods(list, 'month', 1)).toEqual([{ key: '2027-01', avg: 73, min: 73, max: 73, delta: -1 }])
   })
 
   it('returns nothing without entries', () => {

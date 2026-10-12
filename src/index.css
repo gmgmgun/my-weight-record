@@ -142,6 +142,10 @@ button.danger { background: none; color: var(--danger); border: 1.5px solid curr
 .periods th { color: var(--muted); font-size: 0.75rem; font-weight: 600; text-align: right; padding: 0 4px 8px; }
 .periods td { text-align: right; padding: 10px 4px; border-top: 1px solid var(--line); font-family: var(--font-num); font-weight: 500; }
 .periods th:first-child, .periods td:first-child { text-align: left; font-family: var(--font-text); }
+/* 5열(구간·평균·최저·최고·직전 대비)이 좁은 화면에도 들어가도록 글자와 간격을 줄인다 */
+.periods.with-range { font-size: 0.82rem; }
+.periods.with-range th, .periods.with-range td { padding-left: 2px; padding-right: 2px; }
+.periods.with-range td:nth-child(3), .periods.with-range td:nth-child(4) { color: var(--muted); }
 
 /* ---------- 기록·설정 ---------- */
 .history { list-style: none; margin: 8px 0 0; padding: 0; }
