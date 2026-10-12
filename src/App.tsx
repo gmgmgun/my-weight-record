@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { backupFileName, buildBackup } from './backup/backup'
 import type { WeightStore } from './db/storage'
 import { todayLocal } from './lib/date'
+import { ChartScreen } from './ui/ChartScreen'
 import { downloadBackup } from './ui/download'
 import { HistoryScreen } from './ui/HistoryScreen'
 import { HomeScreen } from './ui/HomeScreen'
@@ -48,7 +49,7 @@ export default function App({ store, clock = Date.now }: Props) {
             onExport={exportBackup}
           />
         )}
-        {tab === 'chart' && <p className="hint">그래프 화면</p>}
+        {tab === 'chart' && <ChartScreen entries={app.entries} settings={app.settings} today={today} />}
         {tab === 'history' && <HistoryScreen app={app} today={today} onExport={exportBackup} />}
       </main>
       <nav className="tabs">
