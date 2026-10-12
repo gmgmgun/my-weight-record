@@ -81,7 +81,6 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
             id={weightId}
             inputMode="decimal"
             autoComplete="off"
-            placeholder={prev ? prev.weightKg.toFixed(1) : '0.0'}
             value={weight}
             onChange={(ev) => {
               setWeight(ev.target.value)

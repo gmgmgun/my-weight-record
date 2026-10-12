@@ -56,11 +56,11 @@ describe('home screen', () => {
     expect((await store.getEntries())[0]).not.toHaveProperty('memo')
   })
 
-  it('leaves a day without a record empty, hints the previous weight, and warns on large jumps', async () => {
+  it('leaves a day without a record empty and warns on large jumps', async () => {
     const { store, user } = await renderApp({ seed: (s) => s.putEntry(e('2026-10-11', 72.0)) })
     const input = screen.getByLabelText('체중(kg)')
     expect(input).toHaveValue('')
-    expect(input).toHaveAttribute('placeholder', '72.0')
+    expect(input).not.toHaveAttribute('placeholder')
 
     await user.type(input, '76.0')
     expect(screen.getByText(/3kg 넘게 차이 나요/)).toBeInTheDocument()
@@ -83,15 +83,15 @@ describe('home screen', () => {
     fireEvent.change(date, { target: { value: '2026-10-08' } })
     expect(input).toHaveValue('75.0')
 
-    // 기록이 없는 날: 비워 두고 직전 기록을 안내만 한다
+    // 기록이 없는 날: 숫자를 전혀 보여 주지 않는다
     fireEvent.change(date, { target: { value: '2026-10-09' } })
     expect(input).toHaveValue('')
-    expect(input).toHaveAttribute('placeholder', '75.0')
+    expect(input).not.toHaveAttribute('placeholder')
 
-    // 첫 기록보다 이전 날: 안내할 직전 기록도 없다
+    // 첫 기록보다 이전 날도 마찬가지
     fireEvent.change(date, { target: { value: '2026-10-05' } })
     expect(input).toHaveValue('')
-    expect(input).toHaveAttribute('placeholder', '0.0')
+    expect(input).not.toHaveAttribute('placeholder')
 
     fireEvent.change(date, { target: { value: '2026-10-11' } })
     expect(input).toHaveValue('73.5')
