@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { Entry } from '../types'
 import { openWeightStore } from './storage'
 
@@ -46,5 +46,23 @@ describe('WeightStore', () => {
     const name = `test-${crypto.randomUUID()}`
     await (await openWeightStore(name)).putEntry(e('2026-10-01', 70))
     expect(await (await openWeightStore(name)).getEntries()).toEqual([e('2026-10-01', 70)])
+  })
+
+  it('closes itself and notifies when a newer version upgrades the database', async () => {
+    const name = `test-${crypto.randomUUID()}`
+    const onVersionChange = vi.fn()
+    const store = await openWeightStore(name, { onVersionChange })
+    await store.putEntry(e('2026-10-01', 70))
+
+    // 새 버전(다른 탭)이 저장 구조를 v2로 올리려 한다. 이 연결이 닫히지 않으면 업그레이드가 막힌다.
+    const upgraded = await new Promise<IDBDatabase>((resolve, reject) => {
+      const req = indexedDB.open(name, 2)
+      req.onsuccess = () => resolve(req.result)
+      req.onerror = () => reject(req.error)
+      req.onblocked = () => reject(new Error('upgrade blocked'))
+    })
+    expect(upgraded.version).toBe(2)
+    expect(onVersionChange).toHaveBeenCalledTimes(1)
+    upgraded.close()
   })
 })

@@ -1,32 +1,44 @@
-# React + TypeScript + Vite
+# 몸무게 기록
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+매일 체중을 기록하고 목표 진행률, 지난주·지난달 대비, 7일 평균 추세를 확인하는 개인용 PWA입니다. 서버와 로그인이 없고, 인터넷 없이도 동작합니다.
 
-Currently, two official plugins are available:
+**앱 주소: https://gmgmgun.github.io/my-weight-record/**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 기능
 
-## React Compiler
+- **홈**: 오늘 체중과 메모 입력, 목표 진행률, 지난주·지난달 같은 날 대비, 이번 주 평균. 입력 카드를 좌우로 밀거나 ‹ › 버튼으로 전날·다음날 기록을 봅니다.
+- **그래프**: 날짜별 체중과 7일 이동평균, 목표선. 기간 요약(변화·최저·최고·평균), 주간·월간 평균표(최저·최고 포함), 월요일 체중 추이.
+- **기록·설정**: 기록 목록에서 수정·삭제, 목표 체중과 시작점 설정, 백업 내보내기·가져오기(병합 또는 전체 교체).
+- 다크 모드(시스템 설정을 따름), 폭 600px 이상(폴드 펼친 화면 등)에서는 두 칸 레이아웃.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 폰에 설치하기
 
-## Expanding the Oxlint configuration
+- **Chrome**: 앱 주소를 열고 ⋮ 메뉴 → "앱 설치"(또는 "홈 화면에 추가")
+- **삼성 인터넷**: 주소창의 설치 아이콘, 또는 ☰ 메뉴 → "현재 페이지 추가" → "홈 화면"
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+설치하면 주소창 없이 아이콘으로 실행되고, 한 번 연 뒤에는 오프라인에서도 열립니다. 새 버전을 배포하면 앱을 닫았다가 다시 열 때 적용됩니다.
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## 데이터와 백업
+
+기록은 **설치에 쓴 브라우저 안(IndexedDB)에만** 저장됩니다. 다른 기기나 다른 브라우저와는 공유되지 않고, 브라우저 데이터를 지우면 사라집니다.
+
+- 기록·설정 → **백업 내보내기**로 `weight-backup-YYYY-MM-DD.json` 파일을 저장해 두세요. 마지막 백업 후 30일이 지나면 홈에 알림이 뜹니다.
+- 복원은 **백업 가져오기**로 합니다. 파일을 먼저 검증하므로, 잘못된 파일이면 아무것도 바뀌지 않습니다.
+
+## 개발
+
+```bash
+npm install
+npm run dev        # 개발 서버
+npm test           # 테스트 (Vitest)
+npm run build      # 타입 검사 + 빌드 (dist/)
+npm run preview    # 빌드 결과 미리보기
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+- 구성: Vite, React, TypeScript, IndexedDB(`idb`), Recharts, `vite-plugin-pwa`
+- 구조: 계산(`src/stats`), 백업(`src/backup`), 검증·날짜(`src/lib`)는 화면과 분리된 순수 함수이고, IndexedDB 접근은 `src/db/storage.ts`에만 있습니다.
+- 설계: `docs/superpowers/specs/2026-10-12-weight-record-design.md` (동작이 다르면 코드와 테스트가 기준)
+
+## 배포
+
+`master`에 push하면 GitHub Actions(`.github/workflows/deploy.yml`)가 테스트 → 빌드 → GitHub Pages 배포를 실행합니다. 테스트가 실패하면 배포되지 않습니다.

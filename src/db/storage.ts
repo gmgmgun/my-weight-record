@@ -20,11 +20,29 @@ export type WeightStore = {
   replaceAll(snapshot: AppSnapshot): Promise<void>
 }
 
-export async function openWeightStore(name: string = DEFAULT_DB_NAME): Promise<WeightStore> {
+export type StoreEvents = {
+  // 다른 탭(새 버전)이 저장 구조를 올리려 한다. 이 연결은 닫혔으니 다시 열어야 한다.
+  onVersionChange?: () => void
+  // 이 탭의 업그레이드가 예전 버전이 열린 다른 탭 때문에 기다리고 있다.
+  onBlocked?: () => void
+}
+
+export async function openWeightStore(
+  name: string = DEFAULT_DB_NAME,
+  events: StoreEvents = {},
+): Promise<WeightStore> {
   const db = await openDB<WeightDB>(name, 1, {
     upgrade(database) {
       database.createObjectStore('entries', { keyPath: 'date' })
       database.createObjectStore('settings')
+    },
+    blocked() {
+      events.onBlocked?.()
+    },
+    // 연결을 닫지 않으면 다른 탭의 업그레이드가 영원히 막힌다.
+    blocking() {
+      db.close()
+      events.onVersionChange?.()
     },
   })
 

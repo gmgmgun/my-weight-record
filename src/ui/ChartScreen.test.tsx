@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { renderApp } from '../test/renderApp'
 import type { Entry } from '../types'
 
@@ -12,6 +12,8 @@ async function openChart(entries: Entry[]) {
     },
   })
   await ctx.user.click(screen.getByRole('button', { name: '그래프' }))
+  // 그래프 화면은 처음 열 때 불러온다
+  await waitFor(() => expect(screen.queryByText('그래프를 불러오는 중…')).not.toBeInTheDocument())
   return ctx
 }
 

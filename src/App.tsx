@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { backupFileName, buildBackup } from './backup/backup'
 import type { WeightStore } from './db/storage'
 import { todayLocal } from './lib/date'
-import { ChartScreen } from './ui/ChartScreen'
 import { downloadBackup } from './ui/download'
 import { HistoryScreen } from './ui/HistoryScreen'
 import { HomeScreen } from './ui/HomeScreen'
 import { useAppData } from './ui/useAppData'
+
+// 그래프 라이브러리(Recharts)가 앱 파일의 대부분이라, 그래프 탭을 처음 열 때 불러온다.
+// 오프라인 캐시에는 미리 담기므로 인터넷 없이도 열린다.
+const ChartScreen = lazy(() => import('./ui/ChartScreen').then((m) => ({ default: m.ChartScreen })))
 
 type Tab = 'home' | 'chart' | 'history'
 
@@ -49,7 +52,11 @@ export default function App({ store, clock = Date.now }: Props) {
             onExport={exportBackup}
           />
         )}
-        {tab === 'chart' && <ChartScreen entries={app.entries} settings={app.settings} today={today} />}
+        {tab === 'chart' && (
+          <Suspense fallback={<p className="hint">그래프를 불러오는 중…</p>}>
+            <ChartScreen entries={app.entries} settings={app.settings} today={today} />
+          </Suspense>
+        )}
         {tab === 'history' && <HistoryScreen app={app} today={today} onExport={exportBackup} />}
       </main>
       <nav className="tabs" aria-label="화면 전환">
