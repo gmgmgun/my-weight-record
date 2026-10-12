@@ -109,7 +109,7 @@ button.danger { background: none; color: var(--danger); border: 1.5px solid curr
 .date-pick input { padding: 7px 10px; font-size: 0.85rem; border-radius: 999px; background: var(--accent-soft); border-color: transparent; color: var(--ink); }
 .weight-field { display: grid; gap: 6px; }
 .weight-field > label { display: block; }
-.weight-box { background: var(--surface); display: flex; align-items: baseline; justify-content: center; gap: 6px; border: 1.5px solid var(--line); border-radius: var(--r-field); padding: 6px 14px; }
+.weight-box { background: var(--surface); display: flex; align-items: baseline; justify-content: center; gap: 6px; border: 1.5px solid var(--line); border-radius: var(--r-field); padding: 14px; cursor: text; }
 .weight-box:focus-within { border-color: var(--accent); }
 .weight-box input { border: none; padding: 0; width: 3.4em; text-align: center; font-family: var(--font-num); font-size: 3rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; background: transparent; }
 .weight-box input:focus-visible { outline: none; }

@@ -85,6 +85,19 @@ describe('home screen', () => {
     expect(button.querySelector('svg.save-check')).not.toBeNull()
   })
 
+  it('starts weight entry when tapping anywhere in the weight box', async () => {
+    const { user } = await renderApp()
+    const input = screen.getByLabelText('체중(kg)')
+    const box = input.closest('.weight-box') as HTMLElement
+
+    await user.click(box.querySelector('.unit')!) // 'kg' 글자
+    expect(input).toHaveFocus()
+
+    ;(input as HTMLInputElement).blur()
+    await user.click(box) // 박스의 빈 공간
+    expect(input).toHaveFocus()
+  })
+
   it('shows a validation error and does not save', async () => {
     const { store, user } = await renderApp()
     await user.type(screen.getByLabelText('체중(kg)'), 'abc')

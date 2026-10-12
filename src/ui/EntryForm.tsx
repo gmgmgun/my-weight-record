@@ -71,6 +71,7 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
   const [justSaved, setJustSaved] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
   const boxRef = useRef<HTMLDivElement>(null)
+  const weightRef = useRef<HTMLInputElement>(null)
   const savedTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => () => clearTimeout(savedTimer.current), [])
 
@@ -188,8 +189,10 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
           <label htmlFor={weightId}>
             체중<span className="sr-only">(kg)</span>
           </label>
-          <div ref={boxRef} className="weight-box">
+          {/* 숫자 부분만이 아니라 박스 어디를 눌러도(빈 공간, kg 글자) 입력을 시작한다 */}
+          <div ref={boxRef} className="weight-box" onClick={() => weightRef.current?.focus()}>
             <input
+              ref={weightRef}
               id={weightId}
               inputMode="numeric"
               autoComplete="off"
