@@ -24,7 +24,7 @@ export function HistoryScreen({ app, today, onExport }: Props) {
   }
 
   return (
-    <>
+    <div className="split">
       <section className="card" aria-label="기록 목록">
         <h2>기록</h2>
         {rows.length === 0 && <p className="hint">아직 기록이 없습니다.</p>}
@@ -65,6 +65,6 @@ export function HistoryScreen({ app, today, onExport }: Props) {
         </ul>
       </section>
       <SettingsPanel app={app} onExport={onExport} />
-    </>
+    </div>
   )
 }

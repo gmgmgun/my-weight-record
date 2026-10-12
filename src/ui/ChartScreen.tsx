@@ -58,7 +58,7 @@ export function ChartScreen({ entries, settings, today }: Props) {
           <p className="hint">이 기간에는 기록이 없습니다.</p>
         ) : (
           <div className="chart">
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
                 <CartesianGrid stroke="var(--line)" vertical={false} />
                 <XAxis
@@ -113,57 +113,58 @@ export function ChartScreen({ entries, settings, today }: Props) {
         )}
       </section>
 
-      {summary && (
-        <section className="card" aria-label="기간 요약">
-          <dl className="stats">
-            <div>
-              <dt>변화</dt>
-              <dd>{fmtDelta(summary.change)}</dd>
-            </div>
-            <div>
-              <dt>최저</dt>
-              <dd>{fmtKg(summary.min)}</dd>
-            </div>
-            <div>
-              <dt>최고</dt>
-              <dd>{fmtKg(summary.max)}</dd>
-            </div>
-            <div>
-              <dt>평균</dt>
-              <dd>{fmtKg(summary.avg)}</dd>
-            </div>
-          </dl>
-        </section>
-      )}
-
-      <section className="card" aria-label="평균 비교">
-        <div className="segmented" role="group" aria-label="단위">
-          <button type="button" aria-pressed={unit === 'week'} onClick={() => setUnit('week')}>
-            주간
-          </button>
-          <button type="button" aria-pressed={unit === 'month'} onClick={() => setUnit('month')}>
-            월간
-          </button>
-        </div>
-        <table className="periods">
-          <thead>
-            <tr>
-              <th>{unit === 'week' ? '주' : '월'}</th>
-              <th>평균</th>
-              <th>직전 대비</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.key}>
-                <td>{fmtPeriod(r.key, unit)}</td>
-                <td>{fmtKg(r.avg)}</td>
-                <td>{fmtDelta(r.delta)}</td>
+      <div className="split">
+        {summary && (
+          <section className="card" aria-label="기간 요약">
+            <dl className="stats">
+              <div>
+                <dt>변화</dt>
+                <dd>{fmtDelta(summary.change)}</dd>
+              </div>
+              <div>
+                <dt>최저</dt>
+                <dd>{fmtKg(summary.min)}</dd>
+              </div>
+              <div>
+                <dt>최고</dt>
+                <dd>{fmtKg(summary.max)}</dd>
+              </div>
+              <div>
+                <dt>평균</dt>
+                <dd>{fmtKg(summary.avg)}</dd>
+              </div>
+            </dl>
+          </section>
+        )}
+        <section className="card" aria-label="평균 비교">
+          <div className="segmented" role="group" aria-label="단위">
+            <button type="button" aria-pressed={unit === 'week'} onClick={() => setUnit('week')}>
+              주간
+            </button>
+            <button type="button" aria-pressed={unit === 'month'} onClick={() => setUnit('month')}>
+              월간
+            </button>
+          </div>
+          <table className="periods">
+            <thead>
+              <tr>
+                <th>{unit === 'week' ? '주' : '월'}</th>
+                <th>평균</th>
+                <th>직전 대비</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.key}>
+                  <td>{fmtPeriod(r.key, unit)}</td>
+                  <td>{fmtKg(r.avg)}</td>
+                  <td>{fmtDelta(r.delta)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      </div>
     </>
   )
 }
