@@ -48,7 +48,12 @@ export function EntryForm({ entries, today, initialDate = today, onSave }: Props
       return
     }
     setError(undefined)
-    await onSave(date, parsed.value, memo)
+    try {
+      await onSave(date, parsed.value, memo)
+    } catch {
+      setError('저장하지 못했습니다. 다시 시도해 주세요.')
+      return
+    }
     setStatus('저장했습니다.')
   }
 

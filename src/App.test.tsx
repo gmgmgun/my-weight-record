@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, within } from '@testing-library/react'
 import { NOW, renderApp } from './test/renderApp'
 import type { Entry } from './types'
@@ -27,6 +27,15 @@ describe('home screen', () => {
     await user.click(screen.getByRole('button', { name: '저장' }))
     expect(screen.getByRole('alert')).toHaveTextContent('체중은 숫자로, 소수점 한 자리까지 입력해 주세요.')
     expect(await store.getEntries()).toEqual([])
+  })
+
+  it('shows an error when saving fails', async () => {
+    const { store, user } = await renderApp()
+    vi.spyOn(store, 'putEntry').mockRejectedValueOnce(new Error('quota'))
+    await user.type(screen.getByLabelText('체중(kg)'), '72.4')
+    await user.click(screen.getByRole('button', { name: '저장' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('저장하지 못했습니다. 다시 시도해 주세요.')
+    expect(screen.queryByRole('status')).toBeNull()
   })
 
   it('rejects a future date', async () => {
