@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fmtDate, fmtDelta, fmtKg, fmtPercent, fmtPeriod, trendArrow } from './format'
+import { fmtDate, fmtDelta, fmtKg, fmtPercent, fmtPeriod, fmtShortDate, trendArrow } from './format'
 
 describe('format', () => {
   it('formats kilograms', () => {
@@ -27,5 +27,6 @@ describe('format', () => {
     expect(fmtPercent(49.6)).toBe('50%')
     expect(fmtPeriod('2026-10-12', 'week')).toBe('10/12 주')
     expect(fmtPeriod('2026-10', 'month')).toBe('2026년 10월')
+    expect(fmtShortDate('2026-10-05')).toBe('10/5 (월)')
   })
 })

@@ -1,4 +1,4 @@
-import { addDays, addMonths, diffDays, monthOf, startOfWeek } from '../lib/date'
+import { addDays, addMonths, dayOfWeek, diffDays, monthOf, startOfWeek } from '../lib/date'
 import type { Entry, ISODate, Settings } from '../types'
 
 export function sortByDate(entries: Entry[]): Entry[] {
@@ -91,6 +91,21 @@ export function recentPeriods(entries: Entry[], unit: PeriodUnit, count: number)
     const avg = avgs.get(key)
     const prev = avgs.get(shiftPeriod(key, unit, -1))
     return { key, avg, delta: avg !== undefined && prev !== undefined ? avg - prev : undefined }
+  })
+}
+
+export type WeekdayRow = { date: ISODate; weightKg?: number; delta?: number }
+
+// 오늘(또는 그 이전) 가장 가까운 해당 요일부터 거슬러 올라가며 그날 기록한 체중을 그대로 보여 준다.
+// 직전 대비는 바로 앞주 같은 요일과 둘 다 기록이 있을 때만 계산한다(빠진 주를 건너뛰지 않는다).
+export function recentWeekdays(entries: Entry[], today: ISODate, weekday: number, count: number): WeekdayRow[] {
+  const byDate = new Map(entries.map((e) => [e.date, e.weightKg]))
+  const newest = addDays(today, -((dayOfWeek(today) - weekday + 7) % 7))
+  return Array.from({ length: count }, (_, i) => {
+    const date = addDays(newest, -7 * i)
+    const weightKg = byDate.get(date)
+    const prev = byDate.get(addDays(date, -7))
+    return { date, weightKg, delta: weightKg !== undefined && prev !== undefined ? weightKg - prev : undefined }
   })
 }
 

@@ -5,12 +5,13 @@ import {
   movingAverage7,
   rangeStart,
   recentPeriods,
+  recentWeekdays,
   summarize,
   type PeriodUnit,
   type RangeKey,
 } from '../stats/stats'
 import type { Entry, ISODate, Settings } from '../types'
-import { fmtDelta, fmtKg, fmtPeriod } from './format'
+import { fmtDelta, fmtKg, fmtPeriod, fmtShortDate } from './format'
 
 const RANGES: { id: RangeKey; label: string }[] = [
   { id: '1m', label: '1개월' },
@@ -20,11 +21,22 @@ const RANGES: { id: RangeKey; label: string }[] = [
   { id: 'all', label: '전체' },
 ]
 
+const MONDAY = 1
+
+// 평균표 카드에서 고르는 보기: 주간·월간 평균, 또는 월요일마다 잰 체중
+type TableView = PeriodUnit | 'monday'
+
+const TABLE_VIEWS: { id: TableView; label: string }[] = [
+  { id: 'week', label: '주간' },
+  { id: 'month', label: '월간' },
+  { id: 'monday', label: '월요일' },
+]
+
 type Props = { entries: Entry[]; settings: Settings; today: ISODate }
 
 export function ChartScreen({ entries, settings, today }: Props) {
   const [range, setRange] = useState<RangeKey>('3m')
-  const [unit, setUnit] = useState<PeriodUnit>('week')
+  const [view, setView] = useState<TableView>('week')
 
   if (entries.length === 0) {
     return (
@@ -42,7 +54,20 @@ export function ChartScreen({ entries, settings, today }: Props) {
   const goal = settings.goalKg
   const values = [...visible.map((e) => e.weightKg), ...(goal === undefined ? [] : [goal])]
   const domain = [Math.floor(Math.min(...values) - 1), Math.ceil(Math.max(...values) + 1)]
-  const rows = recentPeriods(entries, unit, unit === 'week' ? 8 : 6)
+  const rows =
+    view === 'monday'
+      ? recentWeekdays(entries, today, MONDAY, 8).map((r) => ({
+          key: r.date,
+          label: fmtShortDate(r.date),
+          value: r.weightKg,
+          delta: r.delta,
+        }))
+      : recentPeriods(entries, view, view === 'week' ? 8 : 6).map((r) => ({
+          key: r.key,
+          label: fmtPeriod(r.key, view),
+          value: r.avg,
+          delta: r.delta,
+        }))
 
   return (
     <>
@@ -138,26 +163,25 @@ export function ChartScreen({ entries, settings, today }: Props) {
         )}
         <section className="card" aria-label="평균 비교">
           <div className="segmented" role="group" aria-label="단위">
-            <button type="button" aria-pressed={unit === 'week'} onClick={() => setUnit('week')}>
-              주간
-            </button>
-            <button type="button" aria-pressed={unit === 'month'} onClick={() => setUnit('month')}>
-              월간
-            </button>
+            {TABLE_VIEWS.map((v) => (
+              <button key={v.id} type="button" aria-pressed={view === v.id} onClick={() => setView(v.id)}>
+                {v.label}
+              </button>
+            ))}
           </div>
           <table className="periods">
             <thead>
               <tr>
-                <th>{unit === 'week' ? '주' : '월'}</th>
-                <th>평균</th>
+                <th>{view === 'week' ? '주' : view === 'month' ? '월' : '월요일'}</th>
+                <th>{view === 'monday' ? '체중' : '평균'}</th>
                 <th>직전 대비</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.key}>
-                  <td>{fmtPeriod(r.key, unit)}</td>
-                  <td>{fmtKg(r.avg)}</td>
+                  <td>{r.label}</td>
+                  <td>{fmtKg(r.value)}</td>
                   <td>{fmtDelta(r.delta)}</td>
                 </tr>
               ))}

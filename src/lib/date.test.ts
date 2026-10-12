@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addDays, addMonths, diffDays, isValidISODate, monthOf, startOfWeek, todayLocal } from './date'
+import { addDays, addMonths, dayOfWeek, diffDays, isValidISODate, monthOf, startOfWeek, todayLocal } from './date'
 
 describe('todayLocal', () => {
   it('uses the local calendar date', () => {
@@ -32,6 +32,14 @@ describe('startOfWeek', () => {
     expect(startOfWeek('2026-10-12')).toBe('2026-10-12')
     expect(startOfWeek('2026-10-18')).toBe('2026-10-12')
     expect(startOfWeek('2026-10-11')).toBe('2026-10-05')
+  })
+})
+
+describe('dayOfWeek', () => {
+  it('returns 0 for Sunday through 6 for Saturday', () => {
+    expect(dayOfWeek('2026-10-11')).toBe(0)
+    expect(dayOfWeek('2026-10-12')).toBe(1)
+    expect(dayOfWeek('2026-10-17')).toBe(6)
   })
 })
 

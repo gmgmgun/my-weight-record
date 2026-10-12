@@ -32,9 +32,13 @@ export function diffDays(a: ISODate, b: ISODate): number {
   return Math.round((toUTC(a) - toUTC(b)) / DAY_MS)
 }
 
+// 0 = 일요일 … 6 = 토요일
+export function dayOfWeek(d: ISODate): number {
+  return new Date(toUTC(d)).getUTCDay()
+}
+
 export function startOfWeek(d: ISODate): ISODate {
-  const dow = new Date(toUTC(d)).getUTCDay()
-  return addDays(d, -((dow + 6) % 7))
+  return addDays(d, -((dayOfWeek(d) + 6) % 7))
 }
 
 export function monthOf(d: ISODate): string {

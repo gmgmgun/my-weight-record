@@ -11,6 +11,7 @@ import {
   progressPercent,
   rangeStart,
   recentPeriods,
+  recentWeekdays,
   sortByDate,
   summarize,
   weekComparison,
@@ -77,6 +78,26 @@ describe('weekComparison', () => {
   it('leaves missing weeks undefined', () => {
     expect(weekComparison([e('2026-10-12', 71)])).toEqual({ thisWeek: 71, lastWeek: undefined })
     expect(weekComparison([])).toEqual({})
+  })
+})
+
+describe('recentWeekdays', () => {
+  const MONDAY = 1
+  const list = [e('2026-10-12', 73.5), e('2026-10-05', 74.2), e('2026-09-21', 74.9), e('2026-10-13', 70)]
+
+  it('lists the most recent Mondays with their own weight and the change from the Monday before', () => {
+    const rows = recentWeekdays(list, '2026-10-14', MONDAY, 4)
+    expect(rows.map((r) => r.date)).toEqual(['2026-10-12', '2026-10-05', '2026-09-28', '2026-09-21'])
+    expect(rows[0].weightKg).toBe(73.5)
+    expect(rows[0].delta).toBeCloseTo(-0.7)
+    expect(rows[1]).toEqual({ date: '2026-10-05', weightKg: 74.2, delta: undefined })
+    expect(rows[2]).toEqual({ date: '2026-09-28', weightKg: undefined, delta: undefined })
+    expect(rows[3]).toEqual({ date: '2026-09-21', weightKg: 74.9, delta: undefined })
+  })
+
+  it('starts from today when today is that weekday, otherwise the one before', () => {
+    expect(recentWeekdays(list, '2026-10-12', MONDAY, 1)[0].date).toBe('2026-10-12')
+    expect(recentWeekdays(list, '2026-10-11', MONDAY, 1)[0].date).toBe('2026-10-05')
   })
 })
 

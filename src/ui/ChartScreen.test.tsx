@@ -58,4 +58,18 @@ describe('chart screen', () => {
     expect(monthRows[1]).toHaveTextContent('2026년 10월72.5-4.5')
     expect(monthRows[2]).toHaveTextContent('2026년 9월77.0–')
   })
+
+  it('shows the weight recorded on each recent Monday', async () => {
+    const { user } = await openChart([e('2026-09-28', 74.0), e('2026-10-05', 73.0), e('2026-10-07', 70), e('2026-10-12', 72.4)])
+    await user.click(screen.getByRole('button', { name: '월요일' }))
+    const region = within(screen.getByRole('region', { name: '평균 비교' }))
+    expect(region.getByRole('columnheader', { name: '체중' })).toBeInTheDocument()
+
+    const rows = region.getAllByRole('row')
+    expect(rows).toHaveLength(1 + 8)
+    expect(rows[1]).toHaveTextContent('10/12 (월)72.4-0.6')
+    expect(rows[2]).toHaveTextContent('10/5 (월)73.0-1.0')
+    expect(rows[3]).toHaveTextContent('9/28 (월)74.0–')
+    expect(rows[4]).toHaveTextContent('9/21 (월)––')
+  })
 })

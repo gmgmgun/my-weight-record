@@ -1,3 +1,4 @@
+import { dayOfWeek } from '../lib/date'
 import type { PeriodUnit } from '../stats/stats'
 import type { ISODate } from '../types'
 
@@ -25,9 +26,13 @@ export function trendArrow(v?: number): string {
 }
 
 export function fmtDate(d: ISODate): string {
-  const [y, m, day] = d.split('-').map(Number)
-  const dow = new Date(Date.UTC(y, m - 1, day)).getUTCDay()
-  return `${m}월 ${day}일 (${WEEKDAYS[dow]})`
+  const [, m, day] = d.split('-').map(Number)
+  return `${m}월 ${day}일 (${WEEKDAYS[dayOfWeek(d)]})`
+}
+
+export function fmtShortDate(d: ISODate): string {
+  const [, m, day] = d.split('-').map(Number)
+  return `${m}/${day} (${WEEKDAYS[dayOfWeek(d)]})`
 }
 
 export function fmtPercent(v: number): string {
