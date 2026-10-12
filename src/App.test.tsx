@@ -158,6 +158,21 @@ describe('home screen', () => {
     expect(panel.getByText(/지난주 대비/).nextElementSibling).toHaveTextContent('-0.6 ▼')
     expect(panel.getByText(/지난달 대비/).nextElementSibling).toHaveTextContent('-1.8 ▼')
     expect(panel.getByText(/이번 주 평균/).nextElementSibling).toHaveTextContent('72.4 (지난주 73.0)')
+    // 무엇과 비교했는지 날짜를 함께 보여 준다
+    expect(panel.getByText('10/5 (월)')).toBeInTheDocument()
+    expect(panel.getByText('9/12 (토)')).toBeInTheDocument()
+  })
+
+  it('shows – when the exact comparison day has no record', async () => {
+    await renderApp({
+      seed: async (s) => {
+        await s.putEntry(e('2026-10-04', 73.0))
+        await s.putEntry(e('2026-10-12', 72.4))
+      },
+    })
+    const panel = within(screen.getByRole('region', { name: '비교' }))
+    expect(panel.getByText(/지난주 대비/).nextElementSibling).toHaveTextContent('–')
+    expect(panel.getByText('10/5 (월)')).toBeInTheDocument()
   })
 
   it('shows goal progress or a link to set one', async () => {

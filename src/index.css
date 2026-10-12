@@ -123,6 +123,7 @@ button.danger { background: none; color: var(--danger); border: 1.5px solid curr
 .tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-field); padding: 12px; display: grid; align-content: start; gap: 4px; }
 .tile dt { font-size: 0.72rem; font-weight: 600; color: var(--muted); }
 .tile dd { margin: 0; font-family: var(--font-num); font-size: 1.25rem; font-weight: 700; color: var(--accent); }
+.tile dd.ref { font-family: var(--font-text); font-size: 0.7rem; font-weight: 500; color: var(--muted); }
 .tile .arrow { font-size: 0.6em; vertical-align: 0.2em; margin-left: 2px; }
 .tile dd small { display: block; font-family: var(--font-text); font-size: 0.7rem; font-weight: 500; color: var(--muted); margin-top: 2px; }
 

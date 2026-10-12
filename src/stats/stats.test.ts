@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Entry } from '../types'
 import {
-  changeVsDaysAgo,
   effectiveStart,
-  findNear,
   inRange,
   latestEntry,
   movingAverage7,
@@ -12,6 +10,7 @@ import {
   rangeStart,
   recentPeriods,
   recentWeekdays,
+  sameDayComparison,
   sortByDate,
   summarize,
   weekComparison,
@@ -35,26 +34,33 @@ describe('ordering helpers', () => {
   })
 })
 
-describe('findNear', () => {
-  it('picks the closest entry within tolerance, earlier on ties', () => {
-    const list = [e('2026-10-02', 70), e('2026-10-08', 71)]
-    expect(findNear(list, '2026-10-05')?.date).toBe('2026-10-02')
-    expect(findNear(list, '2026-10-07')?.date).toBe('2026-10-08')
-    expect(findNear(list, '2026-09-20')).toBeUndefined()
-  })
-})
-
-describe('changeVsDaysAgo', () => {
-  it('compares latest with the entry near N days before', () => {
-    const list = [e('2026-09-10', 74.2), e('2026-10-05', 73.0), e('2026-10-12', 72.4)]
-    expect(changeVsDaysAgo(list, 7)).toBeCloseTo(-0.6)
-    expect(changeVsDaysAgo(list, 30)).toBeCloseTo(-1.8)
+describe('sameDayComparison', () => {
+  it('compares the latest entry with exactly 7 days before', () => {
+    const r = sameDayComparison([e('2026-10-05', 73.0), e('2026-10-06', 99), e('2026-10-12', 72.4)], 'week')
+    expect(r?.refDate).toBe('2026-10-05')
+    expect(r?.delta).toBeCloseTo(-0.6)
   })
 
-  it('returns undefined when nothing is within ±3 days', () => {
-    expect(changeVsDaysAgo([e('2026-10-01', 73), e('2026-10-12', 72)], 7)).toBeUndefined()
-    expect(changeVsDaysAgo([e('2026-10-12', 72)], 7)).toBeUndefined()
-    expect(changeVsDaysAgo([], 7)).toBeUndefined()
+  it('compares with the same day of last month', () => {
+    const r = sameDayComparison([e('2026-09-12', 74.2), e('2026-09-11', 99), e('2026-10-12', 72.4)], 'month')
+    expect(r?.refDate).toBe('2026-09-12')
+    expect(r?.delta).toBeCloseTo(-1.8)
+  })
+
+  it('uses the last day of last month when that day does not exist', () => {
+    expect(sameDayComparison([e('2026-02-28', 72), e('2026-03-31', 70)], 'month')).toEqual({
+      refDate: '2026-02-28',
+      delta: -2,
+    })
+    expect(sameDayComparison([e('2026-05-31', 70)], 'month')?.refDate).toBe('2026-04-30')
+  })
+
+  it('leaves the change empty when that exact day has no record', () => {
+    expect(sameDayComparison([e('2026-10-04', 73), e('2026-10-12', 72)], 'week')).toEqual({
+      refDate: '2026-10-05',
+      delta: undefined,
+    })
+    expect(sameDayComparison([], 'week')).toBeUndefined()
   })
 })
 

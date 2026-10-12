@@ -1,10 +1,10 @@
-import { changeVsDaysAgo, weekComparison } from '../stats/stats'
+import { sameDayComparison, weekComparison } from '../stats/stats'
 import type { Entry } from '../types'
-import { fmtDelta, fmtKg, trendArrow } from './format'
+import { fmtDelta, fmtKg, fmtShortDate, trendArrow } from './format'
 
 export function ComparisonPanel({ entries }: { entries: Entry[] }) {
-  const week = changeVsDaysAgo(entries, 7)
-  const month = changeVsDaysAgo(entries, 30)
+  const week = sameDayComparison(entries, 'week')
+  const month = sameDayComparison(entries, 'month')
   const { thisWeek, lastWeek } = weekComparison(entries)
   const delta = (v?: number) => {
     const arrow = trendArrow(v)
@@ -21,11 +21,13 @@ export function ComparisonPanel({ entries }: { entries: Entry[] }) {
       <dl className="tiles">
         <div className="tile">
           <dt>지난주 대비</dt>
-          <dd>{delta(week)}</dd>
+          <dd>{delta(week?.delta)}</dd>
+          {week && <dd className="ref">{fmtShortDate(week.refDate)}</dd>}
         </div>
         <div className="tile">
           <dt>지난달 대비</dt>
-          <dd>{delta(month)}</dd>
+          <dd>{delta(month?.delta)}</dd>
+          {month && <dd className="ref">{fmtShortDate(month.refDate)}</dd>}
         </div>
         <div className="tile">
           <dt>이번 주 평균</dt>

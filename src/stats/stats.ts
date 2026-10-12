@@ -1,4 +1,4 @@
-import { addDays, addMonths, dayOfWeek, diffDays, monthOf, startOfWeek } from '../lib/date'
+import { addDays, addMonths, dayOfWeek, diffDays, monthOf, startOfWeek, subtractMonthClamped } from '../lib/date'
 import type { Entry, ISODate, Settings } from '../types'
 
 export function sortByDate(entries: Entry[]): Entry[] {
@@ -15,25 +15,16 @@ export function previousEntry(entries: Entry[], date: ISODate): Entry | undefine
   return latestEntry(entries.filter((e) => e.date < date))
 }
 
-export function findNear(entries: Entry[], target: ISODate, tolerance = 3): Entry | undefined {
-  let best: Entry | undefined
-  let bestDist = Infinity
-  for (const e of entries) {
-    const dist = Math.abs(diffDays(e.date, target))
-    if (dist > tolerance) continue
-    if (dist < bestDist || (dist === bestDist && best !== undefined && e.date < best.date)) {
-      best = e
-      bestDist = dist
-    }
-  }
-  return best
-}
+export type SameDayComparison = { refDate: ISODate; delta?: number }
 
-export function changeVsDaysAgo(entries: Entry[], days: number): number | undefined {
+// 가장 최근 기록을 정확히 일주일 전(같은 요일) 또는 지난달 같은 날의 기록과 비교한다.
+// 그날 기록이 없으면 비슷한 날로 대신하지 않고 delta를 비워 둔다.
+export function sameDayComparison(entries: Entry[], period: 'week' | 'month'): SameDayComparison | undefined {
   const latest = latestEntry(entries)
   if (!latest) return undefined
-  const ref = findNear(entries, addDays(latest.date, -days))
-  return ref ? latest.weightKg - ref.weightKg : undefined
+  const refDate = period === 'week' ? addDays(latest.date, -7) : subtractMonthClamped(latest.date)
+  const ref = entries.find((e) => e.date === refDate)
+  return { refDate, delta: ref ? latest.weightKg - ref.weightKg : undefined }
 }
 
 export type AvgPoint = { date: ISODate; avg: number }

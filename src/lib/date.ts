@@ -45,6 +45,16 @@ export function monthOf(d: ISODate): string {
   return d.slice(0, 7)
 }
 
+// 지난달 같은 날. 그 날이 없으면(3/31 → 2월) 지난달 마지막 날로 맞춘다.
+export function subtractMonthClamped(d: ISODate): ISODate {
+  const [y, m, day] = d.split('-').map(Number)
+  const idx = y * 12 + (m - 1) - 1
+  const ty = Math.floor(idx / 12)
+  const tm = idx % 12
+  const lastDay = new Date(Date.UTC(ty, tm + 1, 0)).getUTCDate()
+  return `${ty}-${pad(tm + 1)}-${pad(Math.min(day, lastDay))}`
+}
+
 export function addMonths(month: string, n: number): string {
   const [y, m] = month.split('-').map(Number)
   const idx = y * 12 + (m - 1) + n
