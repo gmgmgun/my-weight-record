@@ -21,6 +21,36 @@ describe('home screen', () => {
     expect(within(screen.getByRole('region', { name: '목표 진행' })).getByText('72.4')).toBeInTheDocument()
   })
 
+  it('offers 수정 for a day that already has a record and updates it in place', async () => {
+    const { store, user } = await renderApp({ seed: (s) => s.putEntry(e('2026-10-12', 72.0, '아침')) })
+    expect(screen.queryByRole('button', { name: '저장' })).not.toBeInTheDocument()
+
+    const input = screen.getByLabelText('체중(kg)')
+    await user.clear(input)
+    await user.type(input, '71.5')
+    await user.click(screen.getByRole('button', { name: '수정' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('수정했습니다.')
+    // 하루 1기록: 같은 날 기록이 하나뿐이고 값만 바뀐다
+    expect(await store.getEntries()).toEqual([
+      { date: '2026-10-12', weightKg: 71.5, memo: '아침', updatedAt: expect.any(Number) },
+    ])
+  })
+
+  it('switches the button from 저장 to 수정 once the day is recorded', async () => {
+    const { user } = await renderApp({ seed: (s) => s.putEntry(e('2026-10-11', 73.5)) })
+    await user.type(screen.getByLabelText('체중(kg)'), '72.4')
+    await user.click(screen.getByRole('button', { name: '저장' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('저장했습니다.')
+    expect(await screen.findByRole('button', { name: '수정' })).toBeInTheDocument()
+
+    // 기록 없는 날로 넘기면 다시 저장
+    await user.click(screen.getByRole('button', { name: '이전 날' }))
+    expect(screen.getByRole('button', { name: '수정' })).toBeInTheDocument() // 10/11은 기록 있음
+    await user.click(screen.getByRole('button', { name: '이전 날' }))
+    expect(screen.getByRole('button', { name: '저장' })).toBeInTheDocument() // 10/10은 기록 없음
+  })
+
   it('shows a validation error and does not save', async () => {
     const { store, user } = await renderApp()
     await user.type(screen.getByLabelText('체중(kg)'), 'abc')

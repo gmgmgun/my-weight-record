@@ -49,9 +49,9 @@ describe('history list', () => {
     expect(input).toHaveValue('73.0')
     await user.clear(input)
     await user.type(input, '72.8')
-    await user.click(screen.getByRole('button', { name: '저장' }))
-    await screen.findByRole('status')
-    expect((await store.getEntries())[0].weightKg).toBe(72.8)
+    await user.click(screen.getByRole('button', { name: '수정' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('수정했습니다.')
+    expect(await store.getEntries()).toEqual([{ date: '2026-10-10', weightKg: 72.8, updatedAt: expect.any(Number) }])
   })
 
   it('edit form has no date input', async () => {

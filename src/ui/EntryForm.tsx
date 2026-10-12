@@ -43,6 +43,9 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
   const [error, setError] = useState<string>()
   const [status, setStatus] = useState<string>()
 
+  // 하루 1기록: 그날 기록이 있으면 같은 날짜 키로 덮어쓰므로 '수정'이다.
+  const recorded = entries.some((x) => x.date === date)
+  const action = recorded ? '수정' : '저장'
   const parsed = parseWeight(weight)
   const prev = previousEntry(entries, date)
   const warn = parsed.ok && isLargeJump(prev?.weightKg, parsed.value)
@@ -89,13 +92,14 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
       return
     }
     setError(undefined)
+    const done = action
     try {
       await onSave(date, parsed.value, memo)
     } catch {
-      setError('저장하지 못했습니다. 다시 시도해 주세요.')
+      setError(`${done}하지 못했습니다. 다시 시도해 주세요.`)
       return
     }
-    setStatus('저장했습니다.')
+    setStatus(`${done}했습니다.`)
   }
 
   return (
@@ -186,7 +190,7 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
       )}
       {status && <p role="status">{status}</p>}
       <button type="submit" className="primary">
-        저장
+        {action}
       </button>
     </form>
   )
