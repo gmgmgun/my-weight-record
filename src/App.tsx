@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
+import { backupFileName, buildBackup } from './backup/backup'
 import type { WeightStore } from './db/storage'
 import { todayLocal } from './lib/date'
+import { downloadBackup } from './ui/download'
+import { HistoryScreen } from './ui/HistoryScreen'
 import { HomeScreen } from './ui/HomeScreen'
 import { useAppData } from './ui/useAppData'
 
@@ -28,13 +31,25 @@ export default function App({ store, clock = Date.now }: Props) {
 
   if (!app) return <p className="hint">불러오는 중…</p>
   const today = todayLocal(new Date(now))
+  const exportBackup = () => {
+    downloadBackup(buildBackup(app), backupFileName(today))
+    void app.updateSettings({ lastBackupAt: clock() })
+  }
 
   return (
     <div className="app">
       <main>
-        {tab === 'home' && <HomeScreen app={app} today={today} onGoSettings={() => setTab('history')} />}
+        {tab === 'home' && (
+          <HomeScreen
+            app={app}
+            today={today}
+            now={now}
+            onGoSettings={() => setTab('history')}
+            onExport={exportBackup}
+          />
+        )}
         {tab === 'chart' && <p className="hint">그래프 화면</p>}
-        {tab === 'history' && <p className="hint">기록·설정 화면</p>}
+        {tab === 'history' && <HistoryScreen app={app} today={today} onExport={exportBackup} />}
       </main>
       <nav className="tabs">
         {TABS.map((t) => (
