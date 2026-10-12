@@ -1,10 +1,15 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import { openWeightStore } from './db/storage'
 import './index.css'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+const root = createRoot(document.getElementById('root')!)
+
+void openWeightStore().then((store) =>
+  root.render(
+    <StrictMode>
+      <App store={store} />
+    </StrictMode>,
+  ),
 )
