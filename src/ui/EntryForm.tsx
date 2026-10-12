@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useId, useState, type FormEvent } from 'react'
 import { isLargeJump, JUMP_WARN_KG, MEMO_MAX, parseWeight } from '../lib/validate'
 import { latestEntry, previousEntry } from '../stats/stats'
 import type { Entry, ISODate } from '../types'
@@ -19,6 +19,7 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
     return { weight: base ? base.weightKg.toFixed(1) : '', memo: own?.memo ?? '' }
   }
 
+  const weightId = useId()
   const [date, setDate] = useState(initialDate)
   const [weight, setWeight] = useState(() => defaultsFor(initialDate).weight)
   const [memo, setMemo] = useState(() => defaultsFor(initialDate).memo)
@@ -62,30 +63,44 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
   return (
     // noValidate: 브라우저 기본 검증(max 날짜 등) 대신 아래 오류 문구로 안내한다.
     <form className="card entry-form" noValidate onSubmit={submit}>
-      <div className="date-row">
-        <strong>{fmtDate(date)}</strong>
+      <div className="entry-head">
+        <strong className="entry-date">{fmtDate(date)}</strong>
         {!lockDate && (
-          <label>
-            날짜
+          <label className="date-pick">
+            <span className="sr-only">날짜</span>
             <input type="date" value={date} max={today} onChange={(ev) => ev.target.value && changeDate(ev.target.value)} />
           </label>
         )}
       </div>
-      <label className="weight-field">
-        체중(kg)
-        <input
-          inputMode="decimal"
-          autoComplete="off"
-          value={weight}
-          onChange={(ev) => {
-            setWeight(ev.target.value)
-            setStatus(undefined)
-          }}
-        />
-      </label>
+      <div className="weight-field">
+        <label htmlFor={weightId}>
+          체중<span className="sr-only">(kg)</span>
+        </label>
+        <div className="weight-box">
+          <input
+            id={weightId}
+            inputMode="decimal"
+            autoComplete="off"
+            placeholder="0.0"
+            value={weight}
+            onChange={(ev) => {
+              setWeight(ev.target.value)
+              setStatus(undefined)
+            }}
+          />
+          <span className="unit" aria-hidden="true">
+            kg
+          </span>
+        </div>
+      </div>
       <label>
         메모
-        <input value={memo} maxLength={MEMO_MAX} onChange={(ev) => setMemo(ev.target.value)} />
+        <input
+          value={memo}
+          maxLength={MEMO_MAX}
+          placeholder="컨디션, 식단 등 (선택)"
+          onChange={(ev) => setMemo(ev.target.value)}
+        />
       </label>
       {error && (
         <p role="alert" className="error">

@@ -60,10 +60,27 @@ export function ChartScreen({ entries, settings, today }: Props) {
           <div className="chart">
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="date" tickFormatter={(d: string) => d.slice(5).replace('-', '/')} minTickGap={24} />
-                <YAxis domain={domain} allowDecimals={false} />
-                <Tooltip formatter={(v) => `${fmtKg(Number(v))}kg`} />
+                <CartesianGrid stroke="var(--line)" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(d: string) => d.slice(5).replace('-', '/')}
+                  minTickGap={24}
+                  tick={{ fill: 'var(--muted)' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis domain={domain} allowDecimals={false} tick={{ fill: 'var(--muted)' }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  formatter={(v) => `${fmtKg(Number(v))}kg`}
+                  contentStyle={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--line)',
+                    borderRadius: 12,
+                    color: 'var(--ink)',
+                  }}
+                  labelStyle={{ color: 'var(--muted)' }}
+                  cursor={{ stroke: 'var(--line)' }}
+                />
                 {goal !== undefined && (
                   <ReferenceLine
                     y={goal}
@@ -76,8 +93,8 @@ export function ChartScreen({ entries, settings, today }: Props) {
                   dataKey="weight"
                   name="체중"
                   stroke="none"
-                  dot={{ r: 3, fill: 'var(--muted)', stroke: 'none', fillOpacity: 0.7 }}
-                  activeDot={{ r: 5, fill: 'var(--muted)', stroke: 'var(--card)' }}
+                  dot={{ r: 3, fill: 'var(--dot)', stroke: 'none' }}
+                  activeDot={{ r: 5, fill: 'var(--dot)', stroke: 'var(--surface)' }}
                   legendType="circle"
                   isAnimationActive={false}
                 />
@@ -86,7 +103,7 @@ export function ChartScreen({ entries, settings, today }: Props) {
                   name="7일 평균"
                   type="monotone"
                   stroke="var(--accent)"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                   dot={false}
                   isAnimationActive={false}
                 />

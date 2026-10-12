@@ -12,8 +12,8 @@ export function GoalProgress({ entries, settings, onGoSettings }: Props) {
   const pct = goal === undefined ? undefined : progressPercent(start.kg, latest.weightKg, goal)
 
   return (
-    <section className="card" aria-label="목표 진행">
-      <dl className="stats">
+    <section className="hero" aria-label="목표 진행">
+      <dl className="hero-stats">
         <div>
           <dt>현재</dt>
           <dd>{fmtKg(latest.weightKg)}</dd>
@@ -35,11 +35,11 @@ export function GoalProgress({ entries, settings, onGoSettings }: Props) {
         </button>
       ) : (
         <div className="progress">
-          <progress value={pct} max={100} aria-label="목표 진행률" />
           <div className="progress-text">
-            <span>{fmtPercent(pct)}</span>
             <span>{pct >= 100 ? '목표 달성!' : `목표까지 ${fmtKg(Math.abs(latest.weightKg - goal))}kg`}</span>
+            <span className="pill">{fmtPercent(pct)}</span>
           </div>
+          <progress value={pct} max={100} aria-label="목표 진행률" />
         </div>
       )}
     </section>

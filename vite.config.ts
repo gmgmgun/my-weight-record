@@ -10,6 +10,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // 숫자용 글꼴(woff2)도 미리 받아 두어 오프라인에서도 같은 모양으로 보이게 한다.
+      workbox: { globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'] },
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
         name: '몸무게 기록',
@@ -19,8 +21,8 @@ export default defineConfig({
         display: 'standalone',
         start_url: '.',
         scope: '.',
-        background_color: '#f4f6f5',
-        theme_color: '#2f6f5e',
+        background_color: '#f3f4fb',
+        theme_color: '#6a7bff',
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
