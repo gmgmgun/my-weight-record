@@ -12,6 +12,9 @@
   --goal: #d9467a;
   --dot: #a7aef0;
   --danger: #c62f55;
+  --success: #2f9e6e;
+  --on-success: #ffffff;
+  --success-glow: rgba(47, 158, 110, 0.28);
   --notice-bg: #ffe9f0;
   --notice-ink: #8a2147;
   --hero: linear-gradient(135deg, #6a7bff 0%, #9b6bff 55%, #ff8fb1 100%);
@@ -45,6 +48,9 @@
     --goal: #ff8fb1;
     --dot: #5d64a8;
     --danger: #ff8fa8;
+    --success: #5fd3a0;
+    --on-success: #0d2a1f;
+    --success-glow: rgba(95, 211, 160, 0.3);
     --notice-bg: #3a2340;
     --notice-ink: #ffc2d6;
     --hero: linear-gradient(135deg, #5664e8 0%, #8457e6 55%, #e0709a 100%);
@@ -73,7 +79,16 @@ input::placeholder { color: var(--muted); opacity: 0.7; }
 input:focus { outline: none; border-color: var(--accent); }
 
 button { font: inherit; font-size: 0.92rem; font-weight: 600; color: var(--ink); background: var(--accent-soft); border: none; border-radius: var(--r-field); padding: 11px 16px; cursor: pointer; }
-button.primary { background: var(--primary); color: var(--on-primary); font-weight: 700; padding: 14px 16px; }
+button.primary { background: var(--primary); color: var(--on-primary); font-weight: 700; padding: 14px 16px; min-height: 50px; transition: background-color 0.25s ease, color 0.25s ease; }
+/* 저장·수정 직후 잠깐: 초록 버튼에 체크가 그려진다 */
+button.primary.is-saved { background: var(--success); color: var(--on-success); }
+.save-check { display: block; width: 22px; height: 22px; margin: 0 auto; }
+.save-check path { stroke-dasharray: 24; stroke-dashoffset: 24; animation: draw-check 0.35s ease-out 0.05s forwards; }
+@keyframes draw-check { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  button.primary { transition: none; }
+  .save-check path { animation: none; stroke-dashoffset: 0; }
+}
 button.link { background: none; padding: 0; color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 button.danger { background: none; color: var(--danger); border: 1.5px solid currentColor; }
 :where(button, input, [tabindex]):focus-visible { outline: 2.5px solid var(--accent); outline-offset: 2px; }

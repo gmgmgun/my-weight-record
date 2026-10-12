@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { addDays } from '../lib/date'
 import { formatWeightDigits, isLargeJump, JUMP_WARN_KG, MEMO_MAX, parseWeight } from '../lib/validate'
 import { previousEntry } from '../stats/stats'
@@ -9,9 +9,13 @@ const SWIPE_MIN_PX = 50
 
 // 하루씩 넘길 때 내용이 들어오는 방향을 보여 준다(전날은 왼쪽에서, 다음날은 오른쪽에서).
 // 입력칸을 다시 만들지 않도록 CSS 키 리마운트 대신 Web Animations API를 쓴다.
+function canAnimate(el: HTMLElement | null): el is HTMLElement {
+  if (!el || typeof el.animate !== 'function') return false
+  return !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+}
+
 function slideIn(el: HTMLElement | null, direction: -1 | 1) {
-  if (!el || typeof el.animate !== 'function') return
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+  if (!canAnimate(el)) return
   el.animate(
     [
       { transform: `translateX(${direction * 28}px)`, opacity: 0 },
@@ -19,6 +23,28 @@ function slideIn(el: HTMLElement | null, direction: -1 | 1) {
     ],
     { duration: 220, easing: 'ease-out' },
   )
+}
+
+const SAVED_MS = 1100
+
+// 저장·수정이 끝났음을 문구 대신 보여 준다: 숫자가 톡 튀고, 카드 테두리가 한 번 빛난다.
+function celebrate(form: HTMLElement | null, box: HTMLElement | null) {
+  if (canAnimate(box)) {
+    box.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], {
+      duration: 360,
+      easing: 'cubic-bezier(.3,1.6,.5,1)',
+    })
+  }
+  if (canAnimate(form)) {
+    form.animate(
+      [
+        { boxShadow: '0 0 0 0 var(--success-glow)' },
+        { boxShadow: '0 0 0 8px var(--success-glow)', offset: 0.35 },
+        { boxShadow: '0 0 0 14px transparent' },
+      ],
+      { duration: 700, easing: 'ease-out' },
+    )
+  }
 }
 
 type Props = {
@@ -42,6 +68,11 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
   const [memo, setMemo] = useState(() => defaultsFor(initialDate).memo)
   const [error, setError] = useState<string>()
   const [status, setStatus] = useState<string>()
+  const [justSaved, setJustSaved] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
+  const boxRef = useRef<HTMLDivElement>(null)
+  const savedTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  useEffect(() => () => clearTimeout(savedTimer.current), [])
 
   // 하루 1기록: 그날 기록이 있으면 같은 날짜 키로 덮어쓰므로 '수정'이다.
   const recorded = entries.some((x) => x.date === date)
@@ -100,11 +131,16 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
       return
     }
     setStatus(`${done}했습니다.`)
+    setJustSaved(true)
+    clearTimeout(savedTimer.current)
+    savedTimer.current = setTimeout(() => setJustSaved(false), SAVED_MS)
+    celebrate(formRef.current, boxRef.current)
   }
 
   return (
     // noValidate: 브라우저 기본 검증(max 날짜 등) 대신 아래 오류 문구로 안내한다.
     <form
+      ref={formRef}
       className="card entry-form"
       noValidate
       onSubmit={submit}
@@ -152,7 +188,7 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
           <label htmlFor={weightId}>
             체중<span className="sr-only">(kg)</span>
           </label>
-          <div className="weight-box">
+          <div ref={boxRef} className="weight-box">
             <input
               id={weightId}
               inputMode="numeric"
@@ -188,9 +224,20 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
           직전 기록({fmtKg(prev?.weightKg)}kg)과 {JUMP_WARN_KG}kg 넘게 차이 나요. 입력값을 확인해 주세요.
         </p>
       )}
-      {status && <p role="status">{status}</p>}
-      <button type="submit" className="primary">
-        {action}
+      {/* 화면 낭독용. 눈으로는 버튼의 체크 표시와 효과로 확인한다. */}
+      {status && (
+        <p role="status" className="sr-only">
+          {status}
+        </p>
+      )}
+      <button type="submit" className={justSaved ? 'primary is-saved' : 'primary'} aria-label={action}>
+        {justSaved ? (
+          <svg className="save-check" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        ) : (
+          action
+        )}
       </button>
     </form>
   )

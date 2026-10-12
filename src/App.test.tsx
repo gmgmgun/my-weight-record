@@ -70,6 +70,21 @@ describe('home screen', () => {
     expect((await store.getEntries())[0].weightKg).toBe(92)
   })
 
+  it('confirms a save with a check on the button instead of a visible message', async () => {
+    const { user } = await renderApp()
+    await user.type(screen.getByLabelText('체중(kg)'), '724')
+    await user.click(screen.getByRole('button', { name: '저장' }))
+
+    // 화면 낭독용으로만 남기고 눈에 보이는 문구는 없다
+    const status = await screen.findByRole('status')
+    expect(status).toHaveTextContent('저장했습니다.')
+    expect(status).toHaveClass('sr-only')
+    // 버튼은 이름(접근성)은 유지한 채 체크 표시로 잠깐 바뀐다
+    const button = screen.getByRole('button', { name: '수정' })
+    expect(button).toHaveClass('is-saved')
+    expect(button.querySelector('svg.save-check')).not.toBeNull()
+  })
+
   it('shows a validation error and does not save', async () => {
     const { store, user } = await renderApp()
     await user.type(screen.getByLabelText('체중(kg)'), 'abc')

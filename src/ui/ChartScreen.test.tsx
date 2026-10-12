@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import { renderApp } from '../test/renderApp'
 import type { Entry } from '../types'
@@ -18,6 +18,12 @@ async function openChart(entries: Entry[]) {
 }
 
 const valueOf = (region: HTMLElement, label: string) => within(region).getByText(label).nextElementSibling
+
+// 그래프 화면은 지연 로딩된다. 처음 불러올 때 그래프 라이브러리 변환이 오래 걸려
+// 첫 테스트가 시간 초과되지 않도록 미리 불러 둔다.
+beforeAll(async () => {
+  await import('./ChartScreen')
+}, 30_000)
 
 describe('chart screen', () => {
   it('shows a hint without entries', async () => {
