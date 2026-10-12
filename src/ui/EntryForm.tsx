@@ -1,6 +1,6 @@
 import { useId, useRef, useState, type FormEvent } from 'react'
 import { addDays } from '../lib/date'
-import { isLargeJump, JUMP_WARN_KG, MEMO_MAX, parseWeight } from '../lib/validate'
+import { formatWeightDigits, isLargeJump, JUMP_WARN_KG, MEMO_MAX, parseWeight } from '../lib/validate'
 import { previousEntry } from '../stats/stats'
 import type { Entry, ISODate } from '../types'
 import { fmtDate, fmtKg } from './format'
@@ -155,11 +155,11 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
           <div className="weight-box">
             <input
               id={weightId}
-              inputMode="decimal"
+              inputMode="numeric"
               autoComplete="off"
               value={weight}
               onChange={(ev) => {
-                setWeight(ev.target.value)
+                setWeight(formatWeightDigits(ev.target.value))
                 setStatus(undefined)
               }}
             />

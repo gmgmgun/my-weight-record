@@ -51,11 +51,30 @@ describe('home screen', () => {
     expect(screen.getByRole('button', { name: '저장' })).toBeInTheDocument() // 10/10은 기록 없음
   })
 
+  it('reads digits as kg with the third digit after the decimal point', async () => {
+    const { store, user } = await renderApp()
+    const input = screen.getByLabelText('체중(kg)')
+    expect(input).toHaveAttribute('inputmode', 'numeric')
+
+    await user.type(input, '933')
+    expect(input).toHaveValue('93.3')
+    await user.click(screen.getByRole('button', { name: '저장' }))
+    await screen.findByRole('status')
+    expect((await store.getEntries())[0].weightKg).toBe(93.3)
+
+    await user.clear(input)
+    await user.type(input, '92')
+    expect(input).toHaveValue('92')
+    await user.click(screen.getByRole('button', { name: '수정' }))
+    await screen.findByText('수정했습니다.')
+    expect((await store.getEntries())[0].weightKg).toBe(92)
+  })
+
   it('shows a validation error and does not save', async () => {
     const { store, user } = await renderApp()
     await user.type(screen.getByLabelText('체중(kg)'), 'abc')
     await user.click(screen.getByRole('button', { name: '저장' }))
-    expect(screen.getByRole('alert')).toHaveTextContent('체중은 숫자로, 소수점 한 자리까지 입력해 주세요.')
+    expect(screen.getByRole('alert')).toHaveTextContent('체중을 숫자로 입력해 주세요. 예: 933 → 93.3kg')
     expect(await store.getEntries()).toEqual([])
   })
 

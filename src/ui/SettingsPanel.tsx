@@ -1,6 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { mergeBackup, parseBackup, replaceWithBackup, type BackupFile } from '../backup/backup'
-import { parseWeight } from '../lib/validate'
+import { formatWeightDigits, parseWeight } from '../lib/validate'
 import type { Settings } from '../types'
 import type { AppState } from './useAppData'
 
@@ -38,7 +38,7 @@ function GoalForm({ settings, onSave }: GoalFormProps) {
     <form className="settings-form" onSubmit={submit}>
       <label>
         목표 체중(kg)
-        <input inputMode="decimal" value={goal} onChange={(ev) => setGoal(ev.target.value)} />
+        <input inputMode="numeric" value={goal} onChange={(ev) => setGoal(formatWeightDigits(ev.target.value))} />
       </label>
       <label>
         시작일 (비우면 첫 기록)
@@ -46,7 +46,11 @@ function GoalForm({ settings, onSave }: GoalFormProps) {
       </label>
       <label>
         시작 체중(kg) (비우면 첫 기록)
-        <input inputMode="decimal" value={startKg} onChange={(ev) => setStartKg(ev.target.value)} />
+        <input
+          inputMode="numeric"
+          value={startKg}
+          onChange={(ev) => setStartKg(formatWeightDigits(ev.target.value))}
+        />
       </label>
       {error && (
         <p role="alert" className="error">

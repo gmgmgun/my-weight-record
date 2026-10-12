@@ -91,7 +91,7 @@ describe('settings', () => {
     const { store, user } = await openHistory()
     await user.type(screen.getByLabelText('목표 체중(kg)'), '10')
     await user.click(screen.getByRole('button', { name: '설정 저장' }))
-    expect(screen.getByRole('alert')).toHaveTextContent('체중은 20~300kg 사이로 입력해 주세요.')
+    expect(screen.getByRole('alert')).toHaveTextContent('체중은 20~99.9kg 사이로 입력해 주세요.')
     expect((await store.getSettings()).goalKg).toBeUndefined()
   })
 
