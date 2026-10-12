@@ -1,6 +1,6 @@
 import { useId, useState, type FormEvent } from 'react'
 import { isLargeJump, JUMP_WARN_KG, MEMO_MAX, parseWeight } from '../lib/validate'
-import { latestEntry, previousEntry } from '../stats/stats'
+import { previousEntry } from '../stats/stats'
 import type { Entry, ISODate } from '../types'
 import { fmtDate, fmtKg } from './format'
 
@@ -13,10 +13,10 @@ type Props = {
 }
 
 export function EntryForm({ entries, today, initialDate = today, lockDate, onSave }: Props) {
+  // 선택한 날짜에 기록이 있을 때만 값을 채운다. 다른 날짜의 값을 채우면 그날 기록된 것처럼 보인다.
   const defaultsFor = (d: ISODate) => {
     const own = entries.find((x) => x.date === d)
-    const base = own ?? latestEntry(entries)
-    return { weight: base ? base.weightKg.toFixed(1) : '', memo: own?.memo ?? '' }
+    return { weight: own ? own.weightKg.toFixed(1) : '', memo: own?.memo ?? '' }
   }
 
   const weightId = useId()
@@ -81,7 +81,7 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
             id={weightId}
             inputMode="decimal"
             autoComplete="off"
-            placeholder="0.0"
+            placeholder={prev ? prev.weightKg.toFixed(1) : '0.0'}
             value={weight}
             onChange={(ev) => {
               setWeight(ev.target.value)

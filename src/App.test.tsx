@@ -56,18 +56,45 @@ describe('home screen', () => {
     expect((await store.getEntries())[0]).not.toHaveProperty('memo')
   })
 
-  it('prefills with the latest weight and warns on large jumps without blocking', async () => {
+  it('leaves a day without a record empty, hints the previous weight, and warns on large jumps', async () => {
     const { store, user } = await renderApp({ seed: (s) => s.putEntry(e('2026-10-11', 72.0)) })
     const input = screen.getByLabelText('체중(kg)')
-    expect(input).toHaveValue('72.0')
+    expect(input).toHaveValue('')
+    expect(input).toHaveAttribute('placeholder', '72.0')
 
-    await user.clear(input)
     await user.type(input, '76.0')
     expect(screen.getByText(/3kg 넘게 차이 나요/)).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '저장' }))
     await screen.findByRole('status')
     expect((await store.getEntries()).map((x) => x.weightKg)).toEqual([72, 76])
+  })
+
+  it('shows the weight recorded on the selected date', async () => {
+    await renderApp({
+      seed: async (s) => {
+        await s.putEntry(e('2026-10-08', 75.0))
+        await s.putEntry(e('2026-10-11', 73.5))
+      },
+    })
+    const date = screen.getByLabelText('날짜')
+    const input = screen.getByLabelText('체중(kg)')
+
+    fireEvent.change(date, { target: { value: '2026-10-08' } })
+    expect(input).toHaveValue('75.0')
+
+    // 기록이 없는 날: 비워 두고 직전 기록을 안내만 한다
+    fireEvent.change(date, { target: { value: '2026-10-09' } })
+    expect(input).toHaveValue('')
+    expect(input).toHaveAttribute('placeholder', '75.0')
+
+    // 첫 기록보다 이전 날: 안내할 직전 기록도 없다
+    fireEvent.change(date, { target: { value: '2026-10-05' } })
+    expect(input).toHaveValue('')
+    expect(input).toHaveAttribute('placeholder', '0.0')
+
+    fireEvent.change(date, { target: { value: '2026-10-11' } })
+    expect(input).toHaveValue('73.5')
   })
 
   it('loads the existing memo when a past date is selected', async () => {
