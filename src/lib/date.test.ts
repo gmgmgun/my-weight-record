@@ -38,10 +38,11 @@ describe('addDays / diffDays', () => {
 })
 
 describe('startOfWeek', () => {
-  it('returns the Monday of the week', () => {
-    expect(startOfWeek('2026-10-12')).toBe('2026-10-12')
-    expect(startOfWeek('2026-10-18')).toBe('2026-10-12')
-    expect(startOfWeek('2026-10-11')).toBe('2026-10-05')
+  it('returns the Sunday that starts the week', () => {
+    // 한 주는 일요일에 시작해 토요일에 끝난다
+    expect(startOfWeek('2026-10-11')).toBe('2026-10-11')
+    expect(startOfWeek('2026-10-17')).toBe('2026-10-11')
+    expect(startOfWeek('2026-10-10')).toBe('2026-10-04')
   })
 })
 

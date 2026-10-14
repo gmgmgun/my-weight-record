@@ -21,15 +21,15 @@ const RANGES: { id: RangeKey; label: string }[] = [
   { id: 'all', label: '전체' },
 ]
 
-const MONDAY = 1
+const SUNDAY = 0
 
-// 평균표 카드에서 고르는 보기: 주간·월간 평균, 또는 월요일마다 잰 체중
-type TableView = PeriodUnit | 'monday'
+// 평균표 카드에서 고르는 보기: 주간·월간 평균, 또는 일요일마다 잰 체중
+type TableView = PeriodUnit | 'sunday'
 
 const TABLE_VIEWS: { id: TableView; label: string }[] = [
   { id: 'week', label: '주간' },
   { id: 'month', label: '월간' },
-  { id: 'monday', label: '월요일' },
+  { id: 'sunday', label: '일요일' },
 ]
 
 type Props = { entries: Entry[]; settings: Settings; today: ISODate }
@@ -54,11 +54,11 @@ export function ChartScreen({ entries, settings, today }: Props) {
   const goal = settings.goalKg
   const values = [...visible.map((e) => e.weightKg), ...(goal === undefined ? [] : [goal])]
   const domain = [Math.floor(Math.min(...values) - 1), Math.ceil(Math.max(...values) + 1)]
-  // 월요일 보기는 하루 값이라 최저·최고 열이 없다
-  const showRange = view !== 'monday'
+  // 일요일 보기는 하루 값이라 최저·최고 열이 없다
+  const showRange = view !== 'sunday'
   const rows =
-    view === 'monday'
-      ? recentWeekdays(entries, today, MONDAY, 8).map((r) => ({
+    view === 'sunday'
+      ? recentWeekdays(entries, today, SUNDAY, 8).map((r) => ({
           key: r.date,
           label: fmtShortDate(r.date),
           value: r.weightKg,
@@ -178,8 +178,8 @@ export function ChartScreen({ entries, settings, today }: Props) {
           <table className={showRange ? 'periods with-range' : 'periods'}>
             <thead>
               <tr>
-                <th>{view === 'week' ? '주' : view === 'month' ? '월' : '월요일'}</th>
-                <th>{view === 'monday' ? '체중' : '평균'}</th>
+                <th>{view === 'week' ? '주' : view === 'month' ? '월' : '일요일'}</th>
+                <th>{view === 'sunday' ? '체중' : '평균'}</th>
                 {showRange && <th>최저</th>}
                 {showRange && <th>최고</th>}
                 <th>직전 대비</th>

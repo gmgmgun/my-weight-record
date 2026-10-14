@@ -37,8 +37,9 @@ export function dayOfWeek(d: ISODate): number {
   return new Date(toUTC(d)).getUTCDay()
 }
 
+// 기록을 일요일에 시작했으므로 한 주는 일요일~토요일이다.
 export function startOfWeek(d: ISODate): ISODate {
-  return addDays(d, -((dayOfWeek(d) + 6) % 7))
+  return addDays(d, -dayOfWeek(d))
 }
 
 export function monthOf(d: ISODate): string {

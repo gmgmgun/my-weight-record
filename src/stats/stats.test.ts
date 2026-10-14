@@ -108,8 +108,8 @@ describe('recentPeriods', () => {
   it('lists weeks newest first with delta vs previous week', () => {
     const list = [e('2026-10-05', 73), e('2026-10-12', 72)]
     expect(recentPeriods(list, 'week', 2)).toEqual([
-      { key: '2026-10-12', avg: 72, min: 72, max: 72, delta: -1 },
-      { key: '2026-10-05', avg: 73, min: 73, max: 73, delta: undefined },
+      { key: '2026-10-11', avg: 72, min: 72, max: 72, delta: -1 },
+      { key: '2026-10-04', avg: 73, min: 73, max: 73, delta: undefined },
     ])
   })
 
