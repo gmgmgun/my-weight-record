@@ -13,7 +13,6 @@ import {
   sameDayComparison,
   sortByDate,
   summarize,
-  weekComparison,
 } from './stats'
 
 const e = (date: string, weightKg: number): Entry => ({ date, weightKg, updatedAt: 0 })
@@ -35,6 +34,16 @@ describe('ordering helpers', () => {
 })
 
 describe('sameDayComparison', () => {
+  it('compares the latest entry with the day before', () => {
+    const r = sameDayComparison([e('2026-10-10', 99), e('2026-10-11', 72.9), e('2026-10-12', 72.4)], 'day')
+    expect(r?.refDate).toBe('2026-10-11')
+    expect(r?.delta).toBeCloseTo(-0.5)
+    expect(sameDayComparison([e('2026-10-10', 73), e('2026-10-12', 72)], 'day')).toEqual({
+      refDate: '2026-10-11',
+      delta: undefined,
+    })
+  })
+
   it('compares the latest entry with exactly 7 days before', () => {
     const r = sameDayComparison([e('2026-10-05', 73.0), e('2026-10-06', 99), e('2026-10-12', 72.4)], 'week')
     expect(r?.refDate).toBe('2026-10-05')
@@ -72,18 +81,6 @@ describe('movingAverage7', () => {
       { date: '2026-10-03', avg: 71 },
       { date: '2026-10-08', avg: 73 },
     ])
-  })
-})
-
-describe('weekComparison', () => {
-  it('compares the calendar week of the latest entry with the previous week', () => {
-    const list = [e('2026-10-05', 73), e('2026-10-11', 72), e('2026-10-12', 71), e('2026-10-14', 70)]
-    expect(weekComparison(list)).toEqual({ thisWeek: 70.5, lastWeek: 72.5 })
-  })
-
-  it('leaves missing weeks undefined', () => {
-    expect(weekComparison([e('2026-10-12', 71)])).toEqual({ thisWeek: 71, lastWeek: undefined })
-    expect(weekComparison([])).toEqual({})
   })
 })
 

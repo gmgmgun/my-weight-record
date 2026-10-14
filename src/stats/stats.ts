@@ -17,12 +17,17 @@ export function previousEntry(entries: Entry[], date: ISODate): Entry | undefine
 
 export type SameDayComparison = { refDate: ISODate; delta?: number }
 
-// 가장 최근 기록을 정확히 일주일 전(같은 요일) 또는 지난달 같은 날의 기록과 비교한다.
+// 가장 최근 기록을 바로 전날, 정확히 일주일 전(같은 요일) 또는 지난달 같은 날의 기록과 비교한다.
 // 그날 기록이 없으면 비슷한 날로 대신하지 않고 delta를 비워 둔다.
-export function sameDayComparison(entries: Entry[], period: 'week' | 'month'): SameDayComparison | undefined {
+export function sameDayComparison(entries: Entry[], period: 'day' | 'week' | 'month'): SameDayComparison | undefined {
   const latest = latestEntry(entries)
   if (!latest) return undefined
-  const refDate = period === 'week' ? addDays(latest.date, -7) : subtractMonthClamped(latest.date)
+  const refDate =
+    period === 'day'
+      ? addDays(latest.date, -1)
+      : period === 'week'
+        ? addDays(latest.date, -7)
+        : subtractMonthClamped(latest.date)
   const ref = entries.find((e) => e.date === refDate)
   return { refDate, delta: ref ? latest.weightKg - ref.weightKg : undefined }
 }
@@ -72,14 +77,6 @@ export function periodStats(entries: Entry[], unit: PeriodUnit): Map<string, Per
     )
   }
   return new Map([...acc].map(([k, v]) => [k, { avg: v.sum / v.count, min: v.min, max: v.max }]))
-}
-
-export function weekComparison(entries: Entry[]): { thisWeek?: number; lastWeek?: number } {
-  const latest = latestEntry(entries)
-  if (!latest) return {}
-  const stats = periodStats(entries, 'week')
-  const week = startOfWeek(latest.date)
-  return { thisWeek: stats.get(week)?.avg, lastWeek: stats.get(addDays(week, -7))?.avg }
 }
 
 export type PeriodRow = { key: string; avg?: number; min?: number; max?: number; delta?: number }

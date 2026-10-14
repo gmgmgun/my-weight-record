@@ -83,6 +83,7 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
   const warn = parsed.ok && isLargeJump(prev?.weightKg, parsed.value)
 
   const bodyRef = useRef<HTMLDivElement>(null)
+  const pickerRef = useRef<HTMLInputElement>(null)
   const touchStart = useRef<{ x: number; y: number } | null>(null)
 
   function shiftDay(days: number) {
@@ -101,6 +102,18 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
     const dy = y - start.y
     if (Math.abs(dx) < SWIPE_MIN_PX || Math.abs(dx) < Math.abs(dy) * 1.5) return
     shiftDay(dx > 0 ? -1 : 1)
+  }
+
+  function openCalendar() {
+    const picker = pickerRef.current
+    if (!picker) return
+    // showPicker가 없거나 막힌 브라우저에서는 입력칸을 눌러 여는 방식으로 대신한다.
+    try {
+      if (typeof picker.showPicker === 'function') return picker.showPicker()
+    } catch {
+      /* 아래로 넘어간다 */
+    }
+    picker.click()
   }
 
   function changeDate(d: ISODate) {
@@ -159,7 +172,30 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
               ‹
             </button>
           )}
-          <strong className="entry-date">{fmtDate(date)}</strong>
+          {lockDate ? (
+            <strong className="entry-date">{fmtDate(date)}</strong>
+          ) : (
+            // 날짜 글자를 누르면 폰 기본 달력이 열린다. 입력칸은 달력 위치만 잡고 보이지 않는다.
+            <span className="date-pick">
+              <button type="button" className="entry-date" onClick={openCalendar}>
+                {fmtDate(date)}
+                <span className="caret" aria-hidden="true">
+                  ▾
+                </span>
+                <span className="sr-only">, 달력 열기</span>
+              </button>
+              <input
+                ref={pickerRef}
+                type="date"
+                aria-label="날짜"
+                aria-hidden="true"
+                tabIndex={-1}
+                value={date}
+                max={today}
+                onChange={(ev) => ev.target.value && changeDate(ev.target.value)}
+              />
+            </span>
+          )}
           {!lockDate && (
             <button
               type="button"
@@ -172,17 +208,6 @@ export function EntryForm({ entries, today, initialDate = today, lockDate, onSav
             </button>
           )}
         </div>
-        {!lockDate && (
-          <label className="date-pick">
-            <span className="sr-only">날짜</span>
-            <input
-              type="date"
-              value={date}
-              max={today}
-              onChange={(ev) => ev.target.value && changeDate(ev.target.value)}
-            />
-          </label>
-        )}
       </div>
       <div ref={bodyRef} className="entry-body">
         <div className="weight-field">

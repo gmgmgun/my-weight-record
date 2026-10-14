@@ -105,8 +105,13 @@ button.danger { background: none; color: var(--danger); border: 1.5px solid curr
 .day-step { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 999px; font-size: 1.35rem; line-height: 1; color: var(--accent); }
 .day-step:disabled { opacity: 0.35; cursor: default; }
 .entry-date { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.01em; min-width: 7.5em; text-align: center; }
+button.entry-date { background: none; color: var(--ink); padding: 6px 8px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+button.entry-date:active { background: var(--accent-soft); }
+.entry-date .caret { font-size: 0.7em; color: var(--accent); }
 .entry-body { display: grid; gap: 14px; }
-.date-pick input { padding: 7px 10px; font-size: 0.85rem; border-radius: 999px; background: var(--accent-soft); border-color: transparent; color: var(--ink); }
+/* 달력이 날짜 글자 바로 아래에 열리도록 같은 자리에 겹쳐 두고, 보이지도 눌리지도 않게 한다 */
+.date-pick { position: relative; }
+.date-pick input { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; opacity: 0; pointer-events: none; }
 .weight-field { display: grid; gap: 6px; }
 .weight-field > label { display: block; }
 .weight-box { background: var(--surface); display: flex; align-items: baseline; justify-content: center; gap: 6px; border: 1.5px solid var(--line); border-radius: var(--r-field); padding: 14px; cursor: text; }

@@ -115,6 +115,25 @@ describe('home screen', () => {
     expect(screen.queryByRole('status')).toBeNull()
   })
 
+  it('opens the calendar from the date title instead of a separate date field', async () => {
+    const showPicker = vi.fn()
+    HTMLInputElement.prototype.showPicker = showPicker
+    const { user } = await renderApp({ seed: (s) => s.putEntry(e('2026-10-08', 75.0)) })
+    const picker = screen.getByLabelText('날짜')
+    // 따로 보이는 날짜 칸은 없다: 숨긴 입력칸은 탭 이동·낭독 대상이 아니다
+    expect(picker).toHaveAttribute('tabindex', '-1')
+    expect(picker).toHaveAttribute('aria-hidden', 'true')
+
+    await user.click(screen.getByRole('button', { name: /10월 12일 \(월\).*달력 열기/ }))
+    expect(showPicker).toHaveBeenCalledTimes(1)
+    expect(showPicker.mock.contexts[0]).toBe(picker)
+
+    fireEvent.change(picker, { target: { value: '2026-10-08' } })
+    expect(screen.getByRole('button', { name: /10월 8일 \(목\)/ })).toBeInTheDocument()
+    expect(screen.getByLabelText('체중(kg)')).toHaveValue('75.0')
+    delete (HTMLInputElement.prototype as Partial<HTMLInputElement>).showPicker
+  })
+
   it('rejects a future date', async () => {
     const { store, user } = await renderApp()
     fireEvent.change(screen.getByLabelText('날짜'), { target: { value: '2026-10-13' } })
@@ -223,19 +242,22 @@ describe('home screen', () => {
     expect(screen.getByText('10월 10일 (토)')).toBeInTheDocument()
   })
 
-  it('shows week, month and weekly-average comparisons', async () => {
+  it('shows yesterday, week and month comparisons', async () => {
     await renderApp({
       seed: async (s) => {
         await s.putEntry(e('2026-09-12', 74.2))
         await s.putEntry(e('2026-10-05', 73.0))
+        await s.putEntry(e('2026-10-11', 72.1))
         await s.putEntry(e('2026-10-12', 72.4))
       },
     })
     const panel = within(screen.getByRole('region', { name: '비교' }))
+    expect(panel.getByText(/어제 대비/).nextElementSibling).toHaveTextContent('+0.3 ▲')
     expect(panel.getByText(/지난주 대비/).nextElementSibling).toHaveTextContent('-0.6 ▼')
     expect(panel.getByText(/지난달 대비/).nextElementSibling).toHaveTextContent('-1.8 ▼')
-    expect(panel.getByText(/이번 주 평균/).nextElementSibling).toHaveTextContent('72.4 (지난주 73.0)')
+    expect(panel.queryByText(/이번 주 평균/)).toBeNull()
     // 무엇과 비교했는지 날짜를 함께 보여 준다
+    expect(panel.getByText('10/11 (일)')).toBeInTheDocument()
     expect(panel.getByText('10/5 (월)')).toBeInTheDocument()
     expect(panel.getByText('9/12 (토)')).toBeInTheDocument()
   })
@@ -249,6 +271,7 @@ describe('home screen', () => {
     })
     const panel = within(screen.getByRole('region', { name: '비교' }))
     expect(panel.getByText(/지난주 대비/).nextElementSibling).toHaveTextContent('–')
+    expect(panel.getByText(/어제 대비/).nextElementSibling).toHaveTextContent('–')
     expect(panel.getByText('10/5 (월)')).toBeInTheDocument()
   })
 
