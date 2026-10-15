@@ -26,6 +26,54 @@ async function openHistory(seed?: Parameters<typeof renderApp>[0]) {
   return ctx
 }
 
+describe('copying records', () => {
+  it('copies the chosen period as text and confirms with a check mark', async () => {
+    const { user } = await openHistory({
+      seed: async (s) => {
+        await s.putEntry(e('2026-09-01', 75.0))
+        await s.putEntry(e('2026-10-10', 73.0))
+        await s.putEntry(e('2026-10-12', 72.4, '운동함'))
+      },
+    })
+    const list = within(screen.getByRole('region', { name: '기록 목록' }))
+    await user.click(list.getByRole('button', { name: '복사' }))
+    const options = within(list.getByRole('group', { name: '복사할 기간' }))
+    await user.click(options.getByRole('button', { name: '최근 1주' }))
+
+    expect(await navigator.clipboard.readText()).toBe(
+      ['몸무게 기록 (10/10 ~ 10/12)', '10/12 (월) 72.4kg  -0.6  운동함', '10/10 (토) 73.0kg  -2.0'].join('\n'),
+    )
+    expect(list.getByRole('status')).toHaveTextContent('기록 2개를 복사했습니다.')
+    expect(list.queryByRole('group', { name: '복사할 기간' })).toBeNull()
+    expect(list.getByRole('button', { name: '복사' })).toHaveClass('is-saved')
+
+    await user.click(list.getByRole('button', { name: '복사' }))
+    await user.click(within(list.getByRole('group', { name: '복사할 기간' })).getByRole('button', { name: '전체' }))
+    expect((await navigator.clipboard.readText()).split('\n')).toHaveLength(4)
+  })
+
+  it('disables periods without records and hides the button when there are none', async () => {
+    const { user } = await openHistory({ seed: (s) => s.putEntry(e('2026-09-01', 75.0)) })
+    const list = within(screen.getByRole('region', { name: '기록 목록' }))
+    await user.click(list.getByRole('button', { name: '복사' }))
+    const options = within(list.getByRole('group', { name: '복사할 기간' }))
+    expect(options.getByRole('button', { name: '최근 1주' })).toBeDisabled()
+    expect(options.getByRole('button', { name: '최근 1개월' })).toBeDisabled()
+    expect(options.getByRole('button', { name: '전체' })).toBeEnabled()
+  })
+
+  it('tells the user when the clipboard refuses', async () => {
+    const { user } = await openHistory({ seed: (s) => s.putEntry(e('2026-10-12', 72.4)) })
+    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValueOnce(new Error('denied'))
+    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {})
+    const list = within(screen.getByRole('region', { name: '기록 목록' }))
+    await user.click(list.getByRole('button', { name: '복사' }))
+    await user.click(within(list.getByRole('group', { name: '복사할 기간' })).getByRole('button', { name: '전체' }))
+    expect(alert).toHaveBeenCalledWith('복사하지 못했습니다. 다시 시도해 주세요.')
+    expect(list.queryByRole('status')).toBeNull()
+  })
+})
+
 describe('history list', () => {
   it('lists entries newest first with deltas and memos', async () => {
     await openHistory({
@@ -72,6 +120,7 @@ describe('history list', () => {
     expect(confirm).toHaveBeenCalledTimes(2)
     expect(await screen.findByText('아직 기록이 없습니다.')).toBeInTheDocument()
     expect(await store.getEntries()).toEqual([])
+    expect(screen.queryByRole('button', { name: '복사' })).toBeNull()
   })
 })
 
