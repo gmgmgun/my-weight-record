@@ -5,6 +5,7 @@ import {
   movingAverage7,
   rangeStart,
   recentPeriods,
+  effectiveStart,
   recentWeekdays,
   summarize,
   type PeriodUnit,
@@ -54,6 +55,9 @@ export function ChartScreen({ entries, settings, today }: Props) {
   const goal = settings.goalKg
   const values = [...visible.map((e) => e.weightKg), ...(goal === undefined ? [] : [goal])]
   const domain = [Math.floor(Math.min(...values) - 1), Math.ceil(Math.max(...values) + 1)]
+  // 누적은 목표 카드의 '시작 대비'와 같은 시작 체중에서 얼마나 변했는지다
+  const startKg = effectiveStart(entries, settings)?.kg
+  const total = (v?: number) => (v === undefined || startKg === undefined ? undefined : v - startKg)
   // 일요일 보기는 하루 값이라 최저·최고 열이 없다
   const showRange = view !== 'sunday'
   const rows =
@@ -183,6 +187,7 @@ export function ChartScreen({ entries, settings, today }: Props) {
                 {showRange && <th>최저</th>}
                 {showRange && <th>최고</th>}
                 <th>직전 대비</th>
+                <th>누적</th>
               </tr>
             </thead>
             <tbody>
@@ -193,10 +198,12 @@ export function ChartScreen({ entries, settings, today }: Props) {
                   {showRange && <td>{fmtKg(r.min)}</td>}
                   {showRange && <td>{fmtKg(r.max)}</td>}
                   <td>{fmtDelta(r.delta)}</td>
+                  <td>{fmtDelta(total(r.value))}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {startKg !== undefined && <p className="table-note">누적: 시작 체중 {fmtKg(startKg)}kg 대비</p>}
         </section>
       </div>
     </>
